@@ -15,6 +15,11 @@ from vikit.core.target import Target, TargetEnum, \
 
 from vikit.core.payload import Payload, PayloadEnum, TYPE_TEXT, TYPE_FILE
 from vikit.core.mixer import mixer
+from vikit.core.param import Param, \
+     TYPE_JSON, \
+     TYPE_INT, TYPE_STR, TYPE_BOOL, TYPE_FLOAT, \
+     TYPE_ENUM, TYPE_BYTES
+     
 
 
 ########################################################################
@@ -57,6 +62,30 @@ class VikitTester(unittest.TestCase):
             count = count + 1
         self.assertEqual(count, 4)
 
+        b = Param(name='arg1', value='"json"', type=TYPE_JSON)
+        Param(name='arg1', value='json', type=TYPE_STR)
+        c = Param(name='arg1', have_to=False, value=None, type=TYPE_INT)
+        Param(name='arg1', value=3, type=TYPE_FLOAT)
+        d = Param(name='arg1', value=None, type=TYPE_FLOAT)
+        Param(name='arg1', value=True, type=TYPE_BOOL)
+        Param(name='arg1', value=b'\xff\xff\xff\xff', type=TYPE_BYTES)
+        
+        s = Param(name='arg1', value=[1,2,3,4], type=TYPE_ENUM)
+        
+        _ = s.check()
+        self.assertTrue(_)
+        
+        _ = c.check()
+        self.assertTrue(_)
+        
+        _ = d.check()
+        self.assertFalse(_)
+        d.value = '12.3'
+        self.assertTrue(c.check())
+        
+        self.assertEqual(s.name, 'arg1')
+    
+    
 
 
 if __name__ == '__main__':
