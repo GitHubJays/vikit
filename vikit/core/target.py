@@ -40,7 +40,7 @@ class TargetEnum(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, targets, type):
+    def __init__(self, targets, type, name='target'):
         """Constructor"""
         assert type in TYPES, 'not a valid type'
         assert type != TYPE_AUTO, 'cannot be TYPE_AUTO'
@@ -51,6 +51,9 @@ class TargetEnum(object):
         self._raw = list(targets)
         _nbuff = -1
         
+        #
+        # type check
+        #
         if type == TYPE_IPV4:
             _nbuff = len(filter(verify_utils.is_ipv4, self._raw))
         elif type == TYPE_DOMAIN:
@@ -90,6 +93,16 @@ class TargetEnum(object):
         self._iter = iter(self._raw)
         self._type = type
         
+        #
+        # set name
+        #
+        self._name = name
+        
+    @property
+    def name(self):
+        """"""
+        return self._name
+        
     #----------------------------------------------------------------------
     def __iter__(self):
         """"""
@@ -117,7 +130,7 @@ class Target(TargetEnum):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, target, type):
+    def __init__(self, target, type, name='target'):
         """Constructor"""
         self._target = target
         
@@ -135,7 +148,7 @@ class Target(TargetEnum):
             else:
                 type = TYPE_RAW
         
-        TargetEnum.__init__(self, targets=list([self._target]), type=type)
+        TargetEnum.__init__(self, targets=list([self._target]), type=type, name=name)
     
     @property
     def data(self):

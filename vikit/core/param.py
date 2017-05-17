@@ -68,15 +68,16 @@ class Param(object):
         #
         # set value and check value
         #
+        self._value_raw = value
         self._value = None
-        self._set_value(value)
+        self._set_value(self._value_raw)
     
     #----------------------------------------------------------------------
     def _set_value(self, value):
         """"""
         
         if value == None:
-            pass
+            self._value = None
         else:
             if self._type != TYPE_JSON:
                 if isinstance(value, _PARAM_TYPE_BASIC_MAP[self._type]):
@@ -113,7 +114,14 @@ class Param(object):
             else:
                 return True
         else:
-            return isinstance(self.value, _PARAM_TYPE_BASIC_MAP[self.type])
+            if self.type == TYPE_JSON:
+                try:
+                    json.loads(self._value_raw)
+                    return True
+                except:
+                    return False 
+            else:
+                return isinstance(self.value, _PARAM_TYPE_BASIC_MAP[self.type])
     
     @property
     def value(self):
@@ -136,4 +144,116 @@ class Param(object):
         return self._have_to
         
 
-                
+
+########################################################################
+class ParamSet(object):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, *args):
+        """Constructor"""
+        
+        #
+        # raw args
+        #
+        self._raw_args = args
+        
+        #
+        # private info
+        #
+        self._param_map = {}
+        self._dumped = {}
+        self._kv = {}
+        
+        #
+        # update
+        #
+        self._update(self._raw_args)
+    
+    #----------------------------------------------------------------------
+    def _update(self, args):
+        """"""
+        _param_name_buffer = []
+        
+        def check_param(x):
+            assert isinstance(x, Param), 'not a valid param! ' + \
+                   'expect:Param but, got a {}'.format(str(type(x)))
+            assert x.name not in _param_name_buffer, 'repeat parameter name(Param.name) !'
+            _param_name_buffer.append(x.name)
+            
+            self._param_map[x.name] = x
+            self._dumped[x.name] = {}
+            self._dumped[x.name]['type'] = x.type
+            self._dumped[x.name]['value'] = x.value
+            self._dumped[x.name]['have_to'] = x.have_to
+            
+            self._kv[x.name] = x.value
+            return x
+            
+        self._params = map(check_param, args)
+    
+    #----------------------------------------------------------------------
+    def get_param_obj_by_name(self, name):
+        """"""
+        return self._param_map.get(name)
+    
+    #----------------------------------------------------------------------
+    def get_param(self, name):
+        """"""
+        return self.get_param_obj_by_name(name)
+    
+    #----------------------------------------------------------------------
+    def get_params(self):
+        """"""
+        return list(self._params)
+    
+    #----------------------------------------------------------------------
+    def dumped(self):
+        """"""
+        return self._dumped
+    
+    #----------------------------------------------------------------------
+    def now(self):
+        """"""
+        return self._kv
+    
+    #----------------------------------------------------------------------
+    def get(self, name):
+        """"""
+        return self._kv.get(name)
+    
+    #----------------------------------------------------------------------
+    def set(self, name, value):
+        """"""
+        _v = self.get_param(name)
+        if _v:
+            assert isinstance(_v, Param)
+            _v.value = value
+        
+        self._update(self._raw_args)
+    
+    #----------------------------------------------------------------------
+    def has_key(self, key):
+        """"""
+        return self._kv.has_key(key)
+    
+    #
+    # check prepared
+    #
+    #----------------------------------------------------------------------
+    def check(self):
+        """"""
+        _buff = list(filter(lambda x: not x.check(), self.get_params()))
+        if _buff == []:
+            return True, _buff
+        else:
+            return False, _buff
+        
+        
+        
+        
+        
+        
+        
+    
+    

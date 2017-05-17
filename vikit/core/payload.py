@@ -21,7 +21,7 @@ class PayloadEnum(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, payloads, type):
+    def __init__(self, payloads, type, name='payload'):
         """Constructor"""
         assert type in TYPES, 'unknow type in payload'
         assert isinstance(payloads, (list, tuple)), 'only support list/tuple as payloads, ' + \
@@ -37,6 +37,16 @@ class PayloadEnum(object):
         
         self._iter = iter(self._payloads)
         self._type = type
+        
+        #
+        # set name
+        #
+        self._name = name
+    
+    @property
+    def name(self):
+        """"""
+        return self._name
     
     #----------------------------------------------------------------------
     def __iter__(self):
@@ -67,12 +77,12 @@ class Payload(PayloadEnum):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, payload, type):
+    def __init__(self, payload, type, name='payload'):
         """Constructor"""
         assert type in TYPES, 'unknow typs in payload'
         
         self._payload_s = payload
-        PayloadEnum.__init__(self, payloads=list([self._payload_s,]), type=type)
+        PayloadEnum.__init__(self, payloads=list([self._payload_s,]), type=type, name=name)
     
     @property
     def data(self):
