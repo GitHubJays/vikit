@@ -9,6 +9,8 @@
 from __future__ import unicode_literals
 
 import unittest
+import time
+
 from vikit.core.target import Target, TargetEnum, \
      TYPE_IPV4, TYPE_IPV6, TYPE_NETLOC, \
      TYPE_URL, TYPE_RAW, TYPE_AUTO, TYPE_FILE
@@ -22,6 +24,7 @@ from vikit.core.param import Param, \
      ParamSet
 
 from vikit.core.modinput import ModInput, TargetDemand, PayloadDemand, ParamDemand
+from vikit.core.mod import ModBasic
      
 
 
@@ -134,7 +137,7 @@ class VikitTester(unittest.TestCase):
         
         target = TargetEnum(targets=['1,23,4', 'adfasdfasd'], type=TYPE_RAW)
         payload1 = Payload(payload='README.md', type=TYPE_FILE, name='payload1')
-        payload2 = PayloadEnum(payloads=list('README.md'), type=TYPE_TEXT, name='payload1')
+        payload2 = PayloadEnum(payloads=list('README.md'), type=TYPE_TEXT, name='payload2')
         param1 = Param(name='p1', value='test')
         modinput.match(target, param1, payload1, payload2)
         
@@ -144,6 +147,36 @@ class VikitTester(unittest.TestCase):
         
         for i in modinput:
             print i
+    
+        #
+        # mod test
+        #
+        
+        def testfunc(target, payload1, payload2, config):
+            time.sleep(3)
+            print('execute: {},{}:{} config:{}'.\
+                  format(target, payload1, payload2, config))
+            return 'execute success!'
+        
+        mod = ModBasic(name='test')
+        #mod.from_module(filename='')
+        mod.from_function(func=testfunc)
+        modinput.reset()
+        for i in modinput:
+            mod.execute(i)
+        
+        result_q = mod.result_queue
+    
+        #mod.join()
+        
+        queue_ = mod.result_queue
+        
+        print('got queue')
+        queue_.get()
+        queue_.get()
+        queue_.get()
+        queue_.get()
+
         
 if __name__ == '__main__':
     unittest.main()

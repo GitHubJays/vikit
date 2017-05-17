@@ -7,8 +7,8 @@
 """
 
 from .param import Param, ParamSet
-from .payload import PayloadEnum
-from .target import TargetEnum
+from .payload import PayloadEnum, Payload
+from .target import TargetEnum, Target
 from .mixer import mixer
 
 ########################################################################
@@ -242,11 +242,13 @@ class ModInput(object):
         _ret = self._demands.match(*args)
         
         for i in args:
-            if isinstance(i, TargetEnum):
+            if isinstance(i, (Target, TargetEnum)):
+                assert not self._target_payload_maps.has_key(i.name)
                 self._targets.append(i)
                 self._target_payload_maps[i.name] = i
-            elif isinstance(i, PayloadEnum):
-                self._payloads.append(i)
+            elif isinstance(i, (Payload, PayloadEnum)):
+                assert not self._target_payload_maps.has_key(i.name)
+                self._payloads.append(i)                
                 self._target_payload_maps[i.name] = i
             elif isinstance(i, Param):
                 self._params.append(i)
@@ -293,6 +295,13 @@ class ModInput(object):
             data[self._target_payload_maps.keys()[_index]] = i[_index]
     
         return data
+    
+    #----------------------------------------------------------------------
+    def reset(self):
+        """"""
+        map(lambda x: x.reset(), self._target_payload_maps.values())
+        self._mixer_gen = mixer(*tuple(self._target_payload_maps.values()))
+        
         
         
         
