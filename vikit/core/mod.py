@@ -245,14 +245,52 @@ class ModStandard(ModBase):
         # default callable functions: INPUT_CHECK_FUNC/SEARCH_FUNC
         #                             /PERSISTENCE_FUNC/QUERY_FUNC
         if hasattr(module_obj, INPUT_CHECK_FUNC):
-            self.INPUT_CHECK_FUNC = getattr(module_obj, INPUT_CHECK_FUNC)
+            _ = getattr(module_obj, INPUT_CHECK_FUNC)
+            assert callable(_)
+            self.INPUT_CHECK_FUNC = _
         else:
-            self.INPUT_CHECK_FUNC = self._check_input()
+            self.INPUT_CHECK_FUNC = self._check_input
+            
+        if hasattr(module_obj, SEARCH_FUNC):
+            _ = getattr(module_obj, SEARCH_FUNC)
+            assert callable(_)
+            self.SEARCH_FUNC = _  
+        else:
+            self.SEARCH_FUNC = self._search_from_db
+        
+        if hasattr(module_obj, PERSISTENCE_FUNC):
+            _ = getattr(module_obj, PERSISTENCE_FUNC)
+            assert callable(_)
+            self.PERSISTENCE_FUNC = _
+        else:
+            self.PERSISTENCE_FUNC = self._persistence_func
+        
+        if hasattr(module_obj, QUERY_FUNC):
+            _ = getattr(module_obj, QUERY_FUNC)
+            assert callable(_)
+            self.QUERY_FUNC = _
+        else:
+            self.QUERY_FUNC = self._query_func
+    
+    #----------------------------------------------------------------------
+    def _query_func(self, key):
+        """"""
+        
+            
+    #----------------------------------------------------------------------
+    def _persistence_func(self, json_content, key=None):
+        """"""
+        
+    
+    #----------------------------------------------------------------------
+    def _search_from_db(self, keywords):
+        """"""
+        
     
     #----------------------------------------------------------------------
     def _check_input(self):
         """"""
-        assert isinstance()
+        assert isinstance(self.DEMANDS)
         
     
     
