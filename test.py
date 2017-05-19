@@ -25,6 +25,8 @@ from vikit.core.param import Param, \
 
 from vikit.core.modinput import ModInput, TargetDemand, PayloadDemand, ParamDemand
 from vikit.core.mod import ModBasic
+
+from vikit.dbm import kvpersist
      
 
 
@@ -125,10 +127,10 @@ class VikitTester(unittest.TestCase):
         self.assertFalse(_r)
         self.assertEqual(len(unset), 1)
         
-        demand1 = TargetDemand(dst='target', dst_type=None)
-        demand2 = PayloadDemand(dst='payload1', dst_type=None)
-        demand3 = PayloadDemand(dst='payload2', dst_type=None)
-        demand4 = ParamDemand(dst='p1', dst_type=None)
+        demand1 = TargetDemand(dst='target', dst_type=TYPE_RAW)
+        demand2 = PayloadDemand(dst='payload1', dst_type=TYPE_FILE)
+        demand3 = PayloadDemand(dst='payload2')
+        demand4 = ParamDemand(dst='p1', dst_type=TYPE_STR)
         
         modinput = ModInput(demand1, demand2, demand3, demand4)
         _, unset = modinput.check()
@@ -163,6 +165,7 @@ class VikitTester(unittest.TestCase):
         mod.from_function(func=testfunc)
         modinput.reset()
         for i in modinput:
+            modinput.check_from_dict(i)
             mod.execute(i)
         
         result_q = mod.result_queue
@@ -176,7 +179,19 @@ class VikitTester(unittest.TestCase):
         queue_.get()
         queue_.get()
         queue_.get()
-
+    
+    #----------------------------------------------------------------------
+    def test_dbm(self):
+        """"""
+        kvm = kvpersist.KVPersister('./vikit/datas/test.db')
+        kvm.set(key='testkey', value='testvalues')
+        assert 'testvalues' == kvm.get(key='testkey')
+        assert None == kvm.get(key='testkey1')
+        self.assertTrue(kvm.has_key(key='testkey'))
+        self.assertFalse(kvm.has_key(key='testkey1'))
+        self.assertFalse(kvm.delete(key='testkey1'))
+        self.assertTrue(kvm.delete(key='testkey'))
+        kvm.close()
         
 if __name__ == '__main__':
     unittest.main()

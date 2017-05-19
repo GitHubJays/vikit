@@ -122,6 +122,15 @@ class TargetEnum(object):
     def all(self):
         """"""
         return self._raw
+    
+    #----------------------------------------------------------------------
+    def check(self):
+        """"""
+        #
+        # type check when created! 
+        #
+        return True
+    
         
         
 

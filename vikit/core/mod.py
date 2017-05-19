@@ -12,8 +12,12 @@ import queue
 import time
 import types
 import os
+import warnings
  
 from g3ar import ThreadPoolX
+
+from ..dbm import kvpersist
+from . import modinput
 
 #
 # DEFINE PRIVATE VAR
@@ -39,13 +43,13 @@ INPUT_CHECK_FUNC = 'INPUT_CHECK_FUNC'
 # core function
 EXPORT_FUNC = 'EXPORT_FUNC'
 
-# search interface: def search(keyword)
+# search interface: def search(key)
 SEARCH_FUNC = 'SEARCH_FUNC'
 
 # db interface
 DATA_DIR = 'DATA_DIR'
 PERSISTENCE_FUNC = 'PERSISTENCE_FUNC'
-QUERY_FUNC = 'QUERY_FUNC'
+DELETE_FROM_DB_FUNC = 'DELETE_FROM_DB_FUNC'
 
 BUILD_IN_VAR = [NAME,
                 AUTHOR,
@@ -56,7 +60,7 @@ BUILD_IN_VAR = [NAME,
                 SEARCH_FUNC,
                 DATA_DIR,
                 PERSISTENCE_FUNC,
-                QUERY_FUNC,
+                #QUERY_FUNC,
                 RESULT_DESC,
                 INPUT_CHECK_FUNC]
 
@@ -111,11 +115,11 @@ class ModBase(Mod):
     def execute(self, modinput_dict):
         """"""
         assert isinstance(modinput_dict, dict)
-        modinput_dict = self.check_params(modinput_dict)
+        modinput_dict = self.hook_check_params(modinput_dict)
         self.pool.feed(target=self._exec, vargs=(modinput_dict, ))
     
     #----------------------------------------------------------------------
-    def check_params(self, params):
+    def hook_check_params(self, params):
         """"""
         return params
     
@@ -182,19 +186,38 @@ class ModStandard(ModBase):
     """"""
     
     #----------------------------------------------------------------------
+    def __del__(self):
+        """"""
+        self.KVP.close()
+    
+    #----------------------------------------------------------------------
     def init(self):
         """"""
         pass
+
+    #----------------------------------------------------------------------
+    def init_db(self):
+        """"""
+        #
+        # create kvp
+        #
+        self.KVP = kvpersist.KVPersister(self.default_datadir(self.NAME))
+        
     
     #----------------------------------------------------------------------
     def default_datadir(self, name):
         """"""
-        _dir = os.path.join(_DEFAULT_DATAS_PATH, name)
-        if os.path.exists(_dir):
+        #
+        # default bdb
+        #
+        _dir = os.path.join(_DEFAULT_DATAS_PATH, name + '.kvp')
+        if os.path.exists(_DEFAULT_DATAS_PATH):
             pass
         else:
-            os.mkdir(_dir)
-            
+            os.mkdir(_DEFAULT_DATAS_PATH)
+        
+        
+        
         return _dir
     
     #
@@ -226,7 +249,8 @@ class ModStandard(ModBase):
         if hasattr(module_obj, DATA_DIR):
             self.DATA_DIR = getattr(module_obj, DATA_DIR)
         else:
-            self.DATA_DIR = self.default_datadir(self.NAME)
+            self.DATA_DIR = _DEFAULT_DATAS_PATH
+        
         
         #
         # process result_desc/export_func/
@@ -239,7 +263,8 @@ class ModStandard(ModBase):
         self._core_func = getattr(module_obj, EXPORT_FUNC)
         
         assert hasattr(module_obj, INPUT)
-        self.DEMANDS = getattr(module_obj, INPUT)
+        self.DEMANDS = tuple(getattr(module_obj, INPUT))
+        
         
         #
         # default callable functions: INPUT_CHECK_FUNC/SEARCH_FUNC
@@ -256,7 +281,7 @@ class ModStandard(ModBase):
             assert callable(_)
             self.SEARCH_FUNC = _  
         else:
-            self.SEARCH_FUNC = self._search_from_db
+            self.SEARCH_FUNC = self._search_func
         
         if hasattr(module_obj, PERSISTENCE_FUNC):
             _ = getattr(module_obj, PERSISTENCE_FUNC)
@@ -265,32 +290,58 @@ class ModStandard(ModBase):
         else:
             self.PERSISTENCE_FUNC = self._persistence_func
         
-        if hasattr(module_obj, QUERY_FUNC):
-            _ = getattr(module_obj, QUERY_FUNC)
-            assert callable(_)
-            self.QUERY_FUNC = _
+        _cdb = True
+        if self.PERSISTENCE_FUNC == self._persistence_func and \
+           self.SEARCH_FUNC == self._search_func and \
+           self.DELETE_FROM_DB_FUNC == self._delete_func:
+            pass
+        elif self.PERSISTENCE_FUNC != self._persistence_func and \
+             self.SEARCH_FUNC != self._search_func and \
+             self.DELETE_FROM_DB_FUNC != self._delete_func:
+            _cdb = False
         else:
-            self.QUERY_FUNC = self._query_func
+            assert False, 'db define should set ' + \
+               'PERSISTENCE_FUNC, SEARCH_FUNC and DELETE_FROM_DB_FUNC at the same time'
+            
+        #
+        # initial db
+        #
+        if _cdb:
+            self.init_db()
+        else:
+            pass
     
     #----------------------------------------------------------------------
-    def _query_func(self, key):
+    def _delete_func(self, key):
         """"""
-        
+        return self.KVP.delete(key)
             
     #----------------------------------------------------------------------
-    def _persistence_func(self, json_content, key=None):
+    def _persistence_func(self, key, value):
         """"""
-        
+        return self.KVP.set(key, value)
     
     #----------------------------------------------------------------------
-    def _search_from_db(self, keywords):
+    def _search_func(self, key):
         """"""
-        
+        return self.KVP.get(key)
     
     #----------------------------------------------------------------------
-    def _check_input(self):
+    def hook_check_params(self, params):
         """"""
-        assert isinstance(self.DEMANDS)
+        try:
+            self.INPUT_CHECK_FUNC(**params)
+        except:
+            warnings.warn('user define input_check_func error! ' + \
+                          'execute default check function!')
+            self._check_input(**params)
         
+        return params
     
+    #----------------------------------------------------------------------
+    def _check_input(self, **params):
+        """"""
+        self._inputchecker = modinput.ModInput(*self.DEMANDS)
+    
+        self._inputchecker.check_from_dict(params, stricted=True)
     

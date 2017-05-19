@@ -6,6 +6,10 @@
   Created: 05/17/17
 """
 
+import warnings
+
+from . import payload
+
 from .param import Param, ParamSet
 from .payload import PayloadEnum, Payload
 from .target import TargetEnum, Target
@@ -74,24 +78,38 @@ class DemandBase(object):
 ########################################################################
 class TargetDemand(DemandBase):
     """"""
-    pass
-
 
 ########################################################################
 class PayloadDemand(DemandBase):
     """"""
-    pass
+    
+    #----------------------------------------------------------------------
+    def __init__(self, dst, dst_type=payload.TYPE_TEXT):
+        """"""
+        DemandBase.__init__(self, dst, dst_type)
+        
 
 
 ########################################################################
 class ParamDemand(DemandBase):
     """"""
-    pass
+    
+    #----------------------------------------------------------------------
+    def __init__(self, dst, dst_type, have_to=True):
+        """"""
+        self._haveto = have_to
+        
+        DemandBase.__init__(self, dst, dst_type)
+    
+    @property
+    def have_to(self):
+        """"""
+        return self._haveto
     
     
 
 ########################################################################
-class _Demands():
+class _Demands(object):
     """"""
 
     #----------------------------------------------------------------------
@@ -105,8 +123,51 @@ class _Demands():
         # build map
         #
         self._map = {}
+        self._map['config'] = {}
         for i in args:
-            self._map[i.dst] = i
+            if isinstance(i, ParamDemand):
+                self._map['config'][i.dst] = i
+            else:
+                self._map[i.dst] = i
+    
+    #----------------------------------------------------------------------
+    def get(self, key):
+        """"""
+        _r = self._map.get(key)
+        if _r:
+            return _r
+        else:
+            return self._map['config'].get(key)
+    
+    #----------------------------------------------------------------------
+    def get_target(self, key='target'):
+        """"""
+        _r = self._map.get(key)
+        if _r in self._d_targets:
+            return _r
+        else:
+            return None
+    
+    #----------------------------------------------------------------------
+    def get_param(self, key):
+        """"""
+        if self._map.has_key('config'):
+            _r = self._map['config'].get(key)
+            if _r in self._d_params:
+                return _r
+            else:
+                return None
+        else:
+            return None
+    
+    #----------------------------------------------------------------------
+    def get_payload(self, key):
+        """"""
+        _r = self._map.get(key)
+        if _r in self._d_payloads:
+            return _r
+        else:
+            return None
         
     #----------------------------------------------------------------------
     def has_target(self, key='target'):
@@ -158,7 +219,10 @@ class _Demands():
         for obj in args:
             _dst = obj.name
             
-            _demand = self._map.get(_dst)
+            if isinstance(obj, Param):
+                _demand = self._map['config'].get(_dst)
+            else:
+                _demand = self._map.get(_dst)
             
             if _demand:
                 assert isinstance(_demand, DemandBase)
@@ -187,10 +251,17 @@ class _Demands():
         unsets = []
         
         for i in self._map.values():
-            if i.check(restricted):
-                pass
+            if isinstance(i, dict):
+                for j in i.values():
+                    if j.check(restricted):
+                        pass
+                    else:
+                        unsets.append(j)
             else:
-                unsets.append(i)
+                if i.check(restricted):
+                    pass
+                else:
+                    unsets.append(i)
         
         if unsets == []:
             return True, unsets
@@ -301,6 +372,61 @@ class ModInput(object):
         """"""
         map(lambda x: x.reset(), self._target_payload_maps.values())
         self._mixer_gen = mixer(*tuple(self._target_payload_maps.values()))
+        
+        
+    #----------------------------------------------------------------------
+    def check_from_dict(self, dict_params, stricted=True):
+        """"""
+        _cf = dict_params.get('config')
+        if _cf:
+            assert isinstance(_cf, dict)
+        
+        #
+        # check target / payload
+        #
+        for i in dict_params.iteritems():
+            key = i[0]
+            value = i[1]
+            
+            if key == 'config':
+                pass
+            else:
+                _d = self._demands.get(key)
+                if _d:
+                    if isinstance(_d, TargetDemand):
+                        
+                        _t = Target(target=value, type=_d.dst_type, name=key)
+                        _d.match(_t)
+                    elif isinstance(_d, PayloadDemand):
+                        _p = Payload(value, _d.dst_type, key)
+                        _d.match(_p)
+                    else:
+                        raise AssertionError('no target or payload found!')
+                else:
+                    warnings.warn('no such param key:{} in demands!'.format(key))
+        
+        #
+        # check params(config)
+        #
+        if _cf:
+            for i in _cf.iteritems():
+                key = i[0]
+                value = i[1]
+                
+                _d = self._demands.get_param(key)
+                if _d:
+                    if isinstance(_d, ParamDemand):
+                        _p = Param(key, value, _d.dst_type, _d.have_to)
+                        _d.match(_p)
+                        assert _p.check(), 'param checked error'
+                    else:
+                        warnings.warn('no param found!')
+                else:
+                    msg = 'no such param key:{} in demands!'.format(key)
+                    warnings.warn(msg)
+        return dict_params
+        
+                    
         
         
         

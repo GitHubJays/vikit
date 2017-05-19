@@ -7,6 +7,7 @@
 """
 
 import os
+import types
 
 #
 # DEFINE TYPE
@@ -67,7 +68,14 @@ class PayloadEnum(object):
     def type(self):
         """"""
         return self._type
-        
+
+    #----------------------------------------------------------------------
+    def check(self):
+        """"""
+        #
+        # type check when created
+        #
+        return True
         
         
         
@@ -79,7 +87,7 @@ class Payload(PayloadEnum):
     #----------------------------------------------------------------------
     def __init__(self, payload, type, name='payload'):
         """Constructor"""
-        assert type in TYPES, 'unknow typs in payload'
+        assert type in TYPES, 'unknow types in payload'
         
         self._payload_s = payload
         PayloadEnum.__init__(self, payloads=list([self._payload_s,]), type=type, name=name)
