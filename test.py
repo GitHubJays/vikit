@@ -27,6 +27,7 @@ from vikit.core.modinput import ModInput, TargetDemand, PayloadDemand, ParamDema
 from vikit.core.mod import ModBasic
 
 from vikit.dbm import kvpersist
+from vikit import result
      
 
 
@@ -192,6 +193,18 @@ class VikitTester(unittest.TestCase):
         self.assertFalse(kvm.delete(key='testkey1'))
         self.assertTrue(kvm.delete(key='testkey'))
         kvm.close()
+    
+    #----------------------------------------------------------------------
+    def test_result(self):
+        """"""
+        result_demo = {'state':True,
+                       'result':{'config':'adfasdf',
+                                 'from':'45.78.6.64'},
+                       'targets':{'1':'https://villanch.top',
+                                  '2':'http://asdfasdf.com'}}
+        
+        _r = result.Result()
+        
         
 if __name__ == '__main__':
     unittest.main()
