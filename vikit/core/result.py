@@ -62,19 +62,27 @@ class Result(object):
 
         #
         # parent checking
-        # 
-        checkit(parent)
-        
+        #
+        try:
+            checkit(parent)
+        except AssertionError as e:
+            pass
         #
         # key checking
         #
-        checkit(key)
+        try:
+            checkit(key)
+        except AssertionError as e:
+            pass
         
         #
         # value checking
         #
-        checkit(value)
-    
+        try:
+            checkit(value)
+        except AssertionError as e:
+            pass
+            
     #----------------------------------------------------------------------
     def extract_targets(self):
         """"""

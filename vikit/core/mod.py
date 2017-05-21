@@ -13,6 +13,7 @@ import time
 import types
 import os
 import warnings
+import threading
 
 from codecs import open
 from g3ar import ThreadPoolX
@@ -105,7 +106,7 @@ class ModBase(Mod):
                                  name=name, debug=debug, loop_interval=loop_interval,
                                  adjuest_interval=adjust_interval, 
                                  diviation_ms=diviation_ms )
-        self.pool.start()
+        
         
         #
         # set result recv and callback
@@ -114,6 +115,8 @@ class ModBase(Mod):
         self.pool.add_callbacks(callback=self._feed_result)
         
         self._core_func = None
+        
+        self.pool.start()
     
     #----------------------------------------------------------------------
     def __del__(self):
@@ -124,7 +127,9 @@ class ModBase(Mod):
     #----------------------------------------------------------------------
     def _feed_result(self, result):
         """"""
+        #print('CALLBACK IS CALLED!')
         self._result_queue.put(result)
+        return result
     
     #----------------------------------------------------------------------
     def execute(self, modinput_dict):

@@ -28,7 +28,8 @@ from vikit.core.mod import ModBasic, ModStandard, ModFactory
 
 from vikit.dbm import kvpersist
 from vikit.core import result
-#from vikit.core import modmanager
+from vikit.core import utils
+from vikit.core import modmanager
      
 
 
@@ -166,7 +167,10 @@ class VikitTester(unittest.TestCase):
         #mod.from_module(filename='')
         mod.from_function(func=testfunc)
         modinput.reset()
+        
+        _count = 0
         for i in modinput:
+            _count = _count + 1
             modinput.check_from_dict(i)
             mod.execute(i)
         
@@ -228,6 +232,15 @@ class VikitTester(unittest.TestCase):
         time.sleep(5)
         _queue = mods.result_queue
         #self.assertEqual(_queue.qsize(), 1)
+        print()
+        print()
+        print()
+        
+        print('WAITING FOR STANDARD MOD RESULT')
+        print()
+        print()
+        print()
+        
         _r = _queue.get()
         assert isinstance(_r, result.Result)
         
@@ -238,14 +251,21 @@ class VikitTester(unittest.TestCase):
             assert isinstance(x, Target)
         
         map(tar, targets)
+        
+        mods.close()
     
     #----------------------------------------------------------------------
     def test_manager(self):
         """"""
+        _manager = modmanager.ModManager(default_mod_path=['./', 'vikit/mods/'])
+        _mod = _manager.start_mod(module_name='demo')
+        assert isinstance(_mod, ModStandard)
+        
+        
         
     
     #----------------------------------------------------------------------
-    def test_modfactory_and_manager(self):
+    def test_modfactory(self):
         """"""
         _factory = ModFactory(min_threads=5, max_threads=20, debug=True,
                               loop_interval=0.2, adjust_interval=3, diviation_ms=100)
@@ -260,8 +280,34 @@ class VikitTester(unittest.TestCase):
                                            'config':{'param1':True,
                                                      'param2':'asdfasd'}})
         _q = standardmod.result_queue
+        #print('WAITING A RESULT!')
+        print()
+        print()
+        print()
+        print()
+        print('WAITING FOR STANDARD MOD RESULT')
+        print()
+        print()
+        print()
+        print()
+        
         _r = _q.get()
         assert isinstance(_r, result.Result)
+    
+    
+    
+    #----------------------------------------------------------------------
+    def test_processexecutor(self):
+        """"""
+        def test():
+            print('sss')
+            time.sleep(3)
+            print('pool executor success!')
+            return True
+        
+        _pe = utils.ProccessExecutor()
+        
+        
         
         
 if __name__ == '__main__':
