@@ -11,20 +11,21 @@ import types
 from . import target
 
 ########################################################################
-class Result:
+class Result(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, dict_obj):
+    def __init__(self, dict_obj, restricted_node_names=['no_targets',]):
         """Constructor"""
         assert isinstance(dict_obj, dict)
         self._dict_obj = dict_obj
         
-        self._traveller = _DictTrav(dict_obj)
-        
         self._target_buff = []
         
         self._remove_repeat = set()
+        
+        assert isinstance(restricted_node_names, list), 'restricted nodes should be a list!'
+        self._restrict_nodes = [] + restricted_node_names
     
     #----------------------------------------------------------------------
     def _pick_up_targets(self, parent, key, value, depth):
@@ -35,16 +36,18 @@ class Result:
         def pick_up_targets(val):
             if val in self._remove_repeat:
                 return
+            else:
+                self._remove_repeat.add(val)
+            
             
             _ = target.Target(target=val, type=target.TYPE_AUTO, name='target')
             
             if _.type == target.TYPE_RAW:
                 try:
-                    _ = target.Target(target, type=target.TYPE_NETLOC, name='target')
+                    _ = target.Target(target=val, type=target.TYPE_NETLOC, name='target')
                 except AssertionError as e:
                     _ = None
-            
-            if _:
+            else:
                 self._target_buff.append(_)
         
         
@@ -53,11 +56,44 @@ class Result:
                 pick_up_targets(t)
             elif isinstance(t, (types.ListType, types.TupleType)):
                 for i in t:
-                    checkit(t)
+                    checkit(i)
             else:
                 pick_up_targets(str(t))
 
+        #
+        # parent checking
+        # 
+        checkit(parent)
+        
+        #
+        # key checking
+        #
+        checkit(key)
+        
+        #
+        # value checking
+        #
+        checkit(value)
+    
+    #----------------------------------------------------------------------
+    def extract_targets(self):
+        """"""
+        self._traveller = _DictTrav(self._dict_obj, handler=self._check_node)
+        self._traveller.gothrough_dict()
+        
+        return self._target_buff
 
+    #----------------------------------------------------------------------
+    def _check_node(self, parent, key, value, depth):
+        """"""
+        if parent in self._restrict_nodes:
+            pass
+        elif key in self._restrict_nodes:
+            pass
+        else:
+            self._pick_up_targets(parent, key, value, depth)
+            
+    
 ########################################################################
 class _DictTrav(object):
     """

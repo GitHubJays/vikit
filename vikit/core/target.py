@@ -63,6 +63,9 @@ class TargetEnum(object):
         elif type == TYPE_NETLOC:
             def _verfify_netloc(x):
                 _ = x.split(':')
+                if len(_) < 2:
+                    return False
+                
                 _net = _[0]
                 _port = _[1]
                 try:

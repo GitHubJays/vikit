@@ -24,10 +24,11 @@ from vikit.core.param import Param, \
      ParamSet
 
 from vikit.core.modinput import ModInput, TargetDemand, PayloadDemand, ParamDemand
-from vikit.core.mod import ModBasic
+from vikit.core.mod import ModBasic, ModStandard, ModFactory
 
 from vikit.dbm import kvpersist
-from vikit import result
+from vikit.core import result
+#from vikit.core import modmanager
      
 
 
@@ -203,7 +204,64 @@ class VikitTester(unittest.TestCase):
                        'targets':{'1':'https://villanch.top',
                                   '2':'http://asdfasdf.com'}}
         
-        _r = result.Result()
+        _r = result.Result(result_demo)
+        targets = _r.extract_targets()
+        assert len(targets) > 0
+        def tar(x):
+            print(x)
+            assert isinstance(x, Target)
+        
+        map(tar, targets)
+    
+    #----------------------------------------------------------------------
+    def test_got_standard_mod(self):
+        """"""
+        mods = ModStandard(name='testmod')
+        
+        module_demo = __import__('demo')
+        mods.from_module(module_obj=module_demo)
+        
+        mods.execute({'target':'http://villanch.top',
+                      'payload':'adfasdfasdf',
+                      'config':{'param1':True,
+                                'param2':'asdfasdf'}})
+        time.sleep(5)
+        _queue = mods.result_queue
+        #self.assertEqual(_queue.qsize(), 1)
+        _r = _queue.get()
+        assert isinstance(_r, result.Result)
+        
+        targets = _r.extract_targets()
+        assert len(targets) > 0
+        def tar(x):
+            print(x)
+            assert isinstance(x, Target)
+        
+        map(tar, targets)
+    
+    #----------------------------------------------------------------------
+    def test_manager(self):
+        """"""
+        
+    
+    #----------------------------------------------------------------------
+    def test_modfactory_and_manager(self):
+        """"""
+        _factory = ModFactory(min_threads=5, max_threads=20, debug=True,
+                              loop_interval=0.2, adjust_interval=3, diviation_ms=100)
+        
+        
+        _demo = __import__('demo')
+        standardmod = _factory.build_standard_mod_from_module(_demo, min_thread=1)
+        assert isinstance(standardmod, ModStandard)
+        
+        standardmod.execute(modinput_dict={"target":'http://tbis.me',
+                                           'payload':'adfa',
+                                           'config':{'param1':True,
+                                                     'param2':'asdfasd'}})
+        _q = standardmod.result_queue
+        _r = _q.get()
+        assert isinstance(_r, result.Result)
         
         
 if __name__ == '__main__':

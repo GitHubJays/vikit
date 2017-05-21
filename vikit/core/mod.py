@@ -13,11 +13,14 @@ import time
 import types
 import os
 import warnings
- 
+
+from codecs import open
 from g3ar import ThreadPoolX
 
 from ..dbm import kvpersist
+from . import result as vikitresult
 from . import modinput
+from . import utils
 
 #
 # DEFINE PRIVATE VAR
@@ -25,6 +28,10 @@ from . import modinput
 _CURRENT_PATH = os.path.dirname(__file__)
 _DEFAULT_DATAS_PATH_R = '../datas/'
 _DEFAULT_DATAS_PATH = os.path.join(_CURRENT_PATH, _DEFAULT_DATAS_PATH_R)
+
+_DEFAULT_MODSBUFFER_PATH_R = '../modsbuffer/'
+_DEFAULT_MODSBUFFER_PATH = os.path.join(_CURRENT_PATH, _DEFAULT_MODSBUFFER_PATH_R)
+
 
 #
 # define keywords
@@ -64,6 +71,9 @@ BUILD_IN_VAR = [NAME,
                 RESULT_DESC,
                 INPUT_CHECK_FUNC]
 
+_MOD_ATTRS = ['min_threads', 'max_threads', 'debug',
+              'loop_interval', 'adjust_interval', 'diviation_ms']
+
 ########################################################################
 class Mod(object):
     """"""
@@ -80,7 +90,7 @@ class ModBase(Mod):
 
     #----------------------------------------------------------------------
     def __init__(self, name, min_threads=5, max_threads=20, debug=True,
-                 loop_interval=0.2, adjuest_interval=3, diviation_ms=100):
+                 loop_interval=0.2, adjust_interval=3, diviation_ms=100):
         """Constructor"""
         Mod.__init__(self)
         
@@ -93,7 +103,7 @@ class ModBase(Mod):
         self._max = max_threads
         self.pool = ThreadPoolX(min_threads=self._min, max_threads=self._max,
                                  name=name, debug=debug, loop_interval=loop_interval,
-                                 adjuest_interval=adjuest_interval, 
+                                 adjuest_interval=adjust_interval, 
                                  diviation_ms=diviation_ms )
         self.pool.start()
         
@@ -104,6 +114,11 @@ class ModBase(Mod):
         self.pool.add_callbacks(callback=self._feed_result)
         
         self._core_func = None
+    
+    #----------------------------------------------------------------------
+    def __del__(self):
+        """"""
+        self.pool.quit()
         
     
     #----------------------------------------------------------------------
@@ -127,10 +142,12 @@ class ModBase(Mod):
     def _exec(self, modinput_dict):
         """"""
         _r = self._core_func(**modinput_dict)
-        result = {'start_time':time.time(),
+        _result = {'start_time':time.time(),
                   'from':str(self._core_func),
                   'payload':modinput_dict,
                   'result':_r}
+        result = vikitresult.Result(_result)
+        return result
     
     @property
     def result_queue(self):
@@ -188,6 +205,7 @@ class ModStandard(ModBase):
     #----------------------------------------------------------------------
     def __del__(self):
         """"""
+        self.pool.quit()
         self.KVP.close()
     
     #----------------------------------------------------------------------
@@ -261,6 +279,7 @@ class ModStandard(ModBase):
         assert hasattr(module_obj, EXPORT_FUNC)
         assert callable(getattr(module_obj, EXPORT_FUNC))
         self._core_func = getattr(module_obj, EXPORT_FUNC)
+        self.EXPORT_FUNC = getattr(module_obj, EXPORT_FUNC)
         
         assert hasattr(module_obj, INPUT)
         self.DEMANDS = tuple(getattr(module_obj, INPUT))
@@ -290,6 +309,13 @@ class ModStandard(ModBase):
         else:
             self.PERSISTENCE_FUNC = self._persistence_func
         
+        if hasattr(module_obj, DELETE_FROM_DB_FUNC):
+            _ = getattr(module_obj, DELETE_FROM_DB_FUNC)
+            assert callable(_)
+            self.DELETE_FROM_DB_FUNC = _
+        else:
+            self.DELETE_FROM_DB_FUNC = self._delete_func
+        
         _cdb = True
         if self.PERSISTENCE_FUNC == self._persistence_func and \
            self.SEARCH_FUNC == self._search_func and \
@@ -300,8 +326,9 @@ class ModStandard(ModBase):
              self.DELETE_FROM_DB_FUNC != self._delete_func:
             _cdb = False
         else:
-            assert False, 'db define should set ' + \
-               'PERSISTENCE_FUNC, SEARCH_FUNC and DELETE_FROM_DB_FUNC at the same time'
+            warnings.warn('db define should set ' + \
+               'PERSISTENCE_FUNC, SEARCH_FUNC and DELETE_FROM_DB_FUNC at the same time')
+            pass
             
         #
         # initial db
@@ -310,6 +337,10 @@ class ModStandard(ModBase):
             self.init_db()
         else:
             pass
+        
+        modenv = vars(module_obj)
+        for i in BUILD_IN_VAR:
+            modenv[i] = getattr(self, i)
     
     #----------------------------------------------------------------------
     def _delete_func(self, key):
@@ -344,4 +375,103 @@ class ModStandard(ModBase):
         self._inputchecker = modinput.ModInput(*self.DEMANDS)
     
         self._inputchecker.check_from_dict(params, stricted=True)
+
+
+########################################################################
+class ModFactory(object):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, min_threads=5, max_threads=20, debug=True,
+                 loop_interval=0.2, adjust_interval=3, diviation_ms=100):
+        """Constructor"""
+        
+        assert int(max_threads) > int(min_threads)
+        
+        self.min_threads = int(min_threads)
+        self.max_threads = int(max_threads)
+        
+        self.debug = debug
+        
+        self.loop_interval = loop_interval
+        self.adjust_interval = adjust_interval
+        self.diviation_ms = diviation_ms
+        
+    #----------------------------------------------------------------------  
+    def mod_args(self, **kwargs):
+        """"""
+        #
+        # init
+        #
+        _r = {}
+        for i in _MOD_ATTRS:
+            _r[i] = getattr(self, i)
+        
+        for kv in kwargs.iteritems():
+            k = kv[0]
+            v = kv[1]
+            
+            if _r.has_key(k):
+                _r = v
+            else:
+                pass
+        
+        return _r
     
+    
+    #
+    # create empty mod 
+    #
+    #----------------------------------------------------------------------
+    def get_basic_mod(self, **kw):
+        """"""
+        return ModBasic(name=utils.uuidhex(), **self.mod_args(**kw))
+    
+    #----------------------------------------------------------------------
+    def get_function_mod(self, **kw):
+        """"""
+        return ModFunction(name=utils.uuidhex(), **self.mod_args(**kw))
+        
+    #----------------------------------------------------------------------
+    def get_standard_mod(self, **kw):
+        """"""
+        return ModStandard(name=utils.uuidhex(), **self.mod_args(**kw))
+        
+    
+    #----------------------------------------------------------------------
+    def build_standard_mod_from_module(self, module_obj, **mod_args):
+        """"""
+        _ = self.get_standard_mod(**mod_args)
+        
+        try:
+            _.from_module(module_obj)
+        except Exception as e:
+            raise e
+    
+        return _    
+    
+    #----------------------------------------------------------------------
+    def build_basic_mod_from_function(self, target_func, **mod_args):
+        """"""
+        _ = self.get_function_mod(**mod_args)
+        
+        try:
+            _.from_function(target_func)
+        except Exception as e:
+            raise e
+        
+        return _
+    
+    #----------------------------------------------------------------------
+    def build_basic_from_module(self, module_obj, **mod_args):
+        """"""
+        _ = self.get_basic_mod(**mod_args)
+        
+        try:
+            _.from_module(module_obj)
+        except Exception as e:
+            raise e 
+        
+        return _
+        
+        
