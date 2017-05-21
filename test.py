@@ -30,6 +30,7 @@ from vikit.dbm import kvpersist
 from vikit.core import result
 from vikit.core import utils
 from vikit.core import modmanager
+from vikit.core import service
      
 
 
@@ -255,15 +256,32 @@ class VikitTester(unittest.TestCase):
         mods.close()
     
     #----------------------------------------------------------------------
-    def test_manager(self):
+    def test_service_and_platform(self):
         """"""
-        _manager = modmanager.ModManager(default_mod_path=['./', 'vikit/mods/'])
-        _mod = _manager.start_mod(module_name='demo')
-        assert isinstance(_mod, ModStandard)
+        name = 'demo'
+        sc = service.ServerConfig(min_threads=5, max_threads=20, debug=True,
+                                  loop_interval=0.2, adjust_interval=3, diviation_ms=100)
+        srvr = service.Server(module_name, config=sc)
         
+        srvr.serve(ip='127.0.0.1', port=11222)
         
+        clnt = service.Client('127.0.0.1', port=11222)
         
-    
+        remote_result = clnt.execute({'target':'http://villanch.top',
+                                      'payload':'adfasdfasdf',
+                                      'config':{'param1':True,
+                                                'param2':'adsfasdfasd'}})
+        self.assertIsInstance(remote_result, service.RemoteResult)
+        _r = remote_result.get()
+        
+        self.assertIsInstance(_r, result.Result)
+
+        #
+        # singleton platform
+        #
+        platform = service.Platform()
+        platform.start(service)
+        
     #----------------------------------------------------------------------
     def test_modfactory(self):
         """"""
@@ -296,18 +314,7 @@ class VikitTester(unittest.TestCase):
     
     
     
-    #----------------------------------------------------------------------
-    def test_processexecutor(self):
-        """"""
-        def test():
-            print('sss')
-            time.sleep(3)
-            print('pool executor success!')
-            return True
-        
-        _pe = utils.ProccessExecutor()
-        
-        
+
         
         
 if __name__ == '__main__':
