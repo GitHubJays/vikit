@@ -10,7 +10,7 @@ import os
 import sys
 import types
 
-from . import mod
+from .. import mod
 
 _CURRENT_PATH = os.path.dirname(__file__)
 _CURRENT_MODS_PATH_R_ = '../mods/'
@@ -48,7 +48,7 @@ class Server(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, module_name, config=None):
+    def __init__(self, module_name, control_host, control_post, config=None):
         """Constructor"""
         
         self._module_name = module_name
@@ -75,6 +75,7 @@ class Server(object):
         self._factory = mod.ModFactory(**_)
         
         self._mod = self._factory.build_standard_mod_from_module(self._module_obj)
+        assert isinstance(self._mod, mod.ModStandard)
         
     @property
     def mod(self):
@@ -89,4 +90,21 @@ class Server(object):
     #----------------------------------------------------------------------
     def execute(self, params):
         """"""
+        self._mod.execute(params)
+        
+    
+    #----------------------------------------------------------------------
+    def serve(self):
+        """"""
+        pass
+    
+    #----------------------------------------------------------------------
+    def stop(self):
+        """"""
+        pass
+    
+    @property
+    def heartbeat(self):
+        """"""
+        return 
         

@@ -31,7 +31,15 @@ from vikit.core import result
 from vikit.core import utils
 from vikit.core import modmanager
 from vikit.core import service
-     
+from vikit.core.service import serializer
+
+
+class Test(object):
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """"""
+        self._ini = 'asdfa'
+        self._bse = 'asdf' 
 
 
 ########################################################################
@@ -258,29 +266,42 @@ class VikitTester(unittest.TestCase):
     #----------------------------------------------------------------------
     def test_service_and_platform(self):
         """"""
-        name = 'demo'
-        sc = service.ServerConfig(min_threads=5, max_threads=20, debug=True,
-                                  loop_interval=0.2, adjust_interval=3, diviation_ms=100)
-        srvr = service.Server(module_name, config=sc)
+        #name = 'demo'
+        #sc = service.ServerConfig(min_threads=5, max_threads=20, debug=True,
+                                  #loop_interval=0.2, adjust_interval=3, diviation_ms=100)
+        #srvr = service.Server(module_name, config=sc)
         
-        srvr.serve(ip='127.0.0.1', port=11222)
+        #srvr.serve(ip='127.0.0.1', port=11222)
         
-        clnt = service.Client('127.0.0.1', port=11222)
+        #clnt = service.Client('127.0.0.1', port=11222)
         
-        remote_result = clnt.execute({'target':'http://villanch.top',
-                                      'payload':'adfasdfasdf',
-                                      'config':{'param1':True,
-                                                'param2':'adsfasdfasd'}})
-        self.assertIsInstance(remote_result, service.RemoteResult)
-        _r = remote_result.get()
+        #remote_result = clnt.execute({'target':'http://villanch.top',
+                                      #'payload':'adfasdfasdf',
+                                      #'config':{'param1':True,
+                                                #'param2':'adsfasdfasd'}})
+        #self.assertIsInstance(remote_result, service.RemoteResult)
+        #_r = remote_result.get()
         
-        self.assertIsInstance(_r, result.Result)
+        #self.assertIsInstance(_r, result.Result)
+    
+        ##
+        ## singleton platform
+        ##
+        #platform = service.Platform()
+        #platform.start(service)
+    
+    #----------------------------------------------------------------------
+    def test_serialize(self):
+        """"""
+        s = serializer.Serializer()
 
-        #
-        # singleton platform
-        #
-        platform = service.Platform()
-        platform.start(service)
+            
+        text = s.serialize(Test())
+        text = s.unserialize(text)
+        self.assertIsInstance(text, Test)
+    
+        
+            
         
     #----------------------------------------------------------------------
     def test_modfactory(self):
