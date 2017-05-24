@@ -82,12 +82,51 @@ class QueryTaskStatus(ClientAction):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, task_id):
+    def __init__(self, cid, task_id):
         """Constructor"""
+        self._cid = cid
+        self._task_id = task_id
+    
+    @property
+    def cid(self):
+        """"""
+        return self._cid
+    
+    @property
+    def task_id(self):
+        """"""
+        return self._task_id
+
+########################################################################
+class Task(ClientAction):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, cid, task_id, params):
+        """Constructor"""
+        self._cid = cid
         self._task_id = task_id
         
         assert isinstance(params, dict)
         self._params = params
+        
+    
+    @property
+    def params(self):
+        """"""
+        return self._params
+
+    @property
+    def task_id(self):
+        """"""
+        return self._task_id
+    
+    @property
+    def cid(self):
+        """"""
+        return self._cid
+    
+    
         
 
 #
@@ -103,8 +142,15 @@ class Hearbeat(ServiceAction):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, _id):
         """Constructor"""
+        self._id = _id
+        
+    @property
+    def sid(self):
+        """"""
+        return self._id
+
         
 # to platform
 ########################################################################
@@ -131,9 +177,15 @@ class TaskStatus(ServiceAction):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, task_id):
+    def __init__(self, task_id, state):
         """Constructor"""
-        
+        self._task_id = task_id
+        self._state = state
+    
+    @property
+    def task_id(self):
+        """"""
+        return self._task_id
         
     
     
