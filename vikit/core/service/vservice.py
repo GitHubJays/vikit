@@ -153,7 +153,8 @@ class VService(object):
         #
         # set result trigger
         #
-        self._start_collect
+        self._result_update_intervale = result_update_intervale
+        self._start_collect_flag = False
     
     
     #----------------------------------------------------------------------
@@ -215,6 +216,7 @@ class VService(object):
         self._STATE = SERVICE_STATE_WORKING
         return True
     
+        
     @property
     def mod(self):
         """"""
@@ -248,13 +250,17 @@ class VService(object):
         #
         # add ack buffer and send result
         #
-        self.wait_for_ack(task_id, _result, conn, check_timeout=self.ack_timeout)
+        self.wait_for_ack(task_id, _result, conn)
         conn.send(_result)
     
     #----------------------------------------------------------------------
     def wait_for_ack(self, task_id, result_obj, conn, check_timeout):
         """"""
-        self.TASK_WAITING_ACK[task_id] = result_obj
+        self.TASK_WAITING_ACK[task_id] = {}
+        self.TASK_WAITING_ACK[task_id]['connection'] = conn
+        self.TASK_WAITING_ACK[task_id]['result_obj'] = result_obj
+        self.TASK_WAITING_ACK[task_id]['retry'] = 0
+        
 
     #----------------------------------------------------------------------
     def ack_task(self):
@@ -279,10 +285,47 @@ class VService(object):
         del self.TASK_RESULT[task_id]
         del self.TASK_WAITING_ACK[task_id]
     
+    
+    #
+    # with a interval to check_ack/update_result
+    #
     #----------------------------------------------------------------------
-    def update_result(self):
+    def _check_ack_arrival(self, conn):
         """"""
+        for i in self.TASK_WAITING_ACK.iteritems():
+            task_id = i[0]
+            conn = i[1].get('connection')
+            result_obj = i[1].get('result_obj')
+            retry_count = i[1].get('retry')
+            
+            try:
+                assert self.TASKID_MAP_TASKENTITY.has_key(task_id)
+                assert self.TASK_WAITING_ACK.has_key(task_id)
+                assert self.TASK_RESULT.has_key(task_id)
+            except AssertionError:
+                continue
+            
+            if retry_count <= self.retry_times:
+                conn.send(result_obj)
+                self.TASK_WAITING_ACK[task_id]["retry"] = retry_count + 1
+            else:
+                self.clear_task(task_id)
+            
+    #----------------------------------------------------------------------
+    def _update_result(self):
+        """"""
+        _mod = self.mod
+        assert isinstance(_mod, mod.ModStandard)
         
+        _queue = _mod.result_queue
+        while True:
+            try:
+                _r = _queue.get_nowait()
+            except queue.Empty:
+                break
+            
+            task_id = _r.get('task_id')
+            self.TASK_RESULT[task_id] = _r
     
     #----------------------------------------------------------------------
     def execute(self, cid, task_id, params):
@@ -298,6 +341,31 @@ class VService(object):
         if isinstance(_mod, mod.ModStandard):
             _mod.execute(params, task_id)
         
+        #
+        # start collecting result
+        #
+        if not self._start_collect_flag:
+            self.start_collecting_result(self._result_update_intervale)
+            self._start_collect_flag = True
+        
+        #
+        # start check ack
+        #
+        if not self._start_checking_ack:
+            self.start_checking_ack(self.ack_timeout)
+            self._start_checking_ack = True
+    
+    #----------------------------------------------------------------------
+    def start_checking_ack(self, interval):
+        """"""
+        self._start_checking_ack_loopingcall = LoopingCall(self._check_ack_arrival)
+        self._start_checking_ack_loopingcall.start(interval)
+    
+    #----------------------------------------------------------------------
+    def start_collecting_result(self, interval):
+        """"""
+        self._result_update_loopingcall = LoopingCall(self._update_result)
+        self._result_update_loopingcall.start(interval)
     
     
 
