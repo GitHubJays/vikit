@@ -16,7 +16,8 @@ from . import actions
 TASK_STATE_FINISHED = 'finished'
 TASK_STATE_TIMEOUT = 'timeout'
 TASK_STATE_PENDING = 'pending'
-
+TASK_STATE_NOT_EXISTED = 'not_exsted'
+TASK_STATE_ERROR = 'error'
 
 #
 # client for service

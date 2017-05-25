@@ -168,8 +168,23 @@ class Result(ServiceAction):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, task_id, dict_obj):
         """Constructor"""
+        self._taskid = task_id
+        self._dict_obj = dict_obj
+        
+        
+    @property
+    def task_id(self):
+        """"""
+        return self._taskid
+        
+        
+    @property
+    def value(self):
+        """"""
+        return self._dict_obj
+        
         
 # to client
 ########################################################################
@@ -186,7 +201,23 @@ class TaskStatus(ServiceAction):
     def task_id(self):
         """"""
         return self._task_id
+
+########################################################################
+class TaskACK(ServiceAction):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, task_id):
+        """Constructor"""
+        self._task_id = task_id
         
+    @property
+    def task_id(self):
+        """"""
+        return self._task_id
+        
+    
+    
     
     
     

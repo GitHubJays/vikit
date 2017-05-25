@@ -194,6 +194,14 @@ class VikitTester(unittest.TestCase):
         queue_.get()
         queue_.get()
         queue_.get()
+        
+        
+        def testerror(target):
+            raise StandardError('adfa')
+        
+        mod = ModBasic(name='ss')
+        mod.from_function(testerror)
+        mod.execute({'target':'adfasdf'})
     
     #----------------------------------------------------------------------
     def test_dbm(self):
@@ -263,32 +271,6 @@ class VikitTester(unittest.TestCase):
         
         mods.close()
     
-    #----------------------------------------------------------------------
-    def test_service_and_platform(self):
-        """"""
-        #name = 'demo'
-        #sc = service.ServerConfig(min_threads=5, max_threads=20, debug=True,
-                                  #loop_interval=0.2, adjust_interval=3, diviation_ms=100)
-        #srvr = service.Server(module_name, config=sc)
-        
-        #srvr.serve(ip='127.0.0.1', port=11222)
-        
-        #clnt = service.Client('127.0.0.1', port=11222)
-        
-        #remote_result = clnt.execute({'target':'http://villanch.top',
-                                      #'payload':'adfasdfasdf',
-                                      #'config':{'param1':True,
-                                                #'param2':'adsfasdfasd'}})
-        #self.assertIsInstance(remote_result, service.RemoteResult)
-        #_r = remote_result.get()
-        
-        #self.assertIsInstance(_r, result.Result)
-    
-        ##
-        ## singleton platform
-        ##
-        #platform = service.Platform()
-        #platform.start(service)
     
     #----------------------------------------------------------------------
     def test_serialize(self):

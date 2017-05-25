@@ -13,6 +13,7 @@ import time
 import types
 import os
 import warnings
+import traceback
 import threading
 
 from codecs import open
@@ -132,11 +133,11 @@ class ModBase(Mod):
         return result
     
     #----------------------------------------------------------------------
-    def execute(self, modinput_dict):
+    def execute(self, modinput_dict, task_id=None):
         """"""
         assert isinstance(modinput_dict, dict)
         modinput_dict = self.hook_check_params(modinput_dict)
-        self.pool.feed(target=self._exec, vargs=(modinput_dict, ))
+        self.pool.feed(target=self._exec, vargs=(task_id, modinput_dict, ))
     
     #----------------------------------------------------------------------
     def hook_check_params(self, params):
@@ -144,13 +145,23 @@ class ModBase(Mod):
         return params
     
     #----------------------------------------------------------------------
-    def _exec(self, modinput_dict):
+    def _exec(self, task_id, modinput_dict):
         """"""
-        _r = self._core_func(**modinput_dict)
+        exception_data = None
+        try:
+            _r = self._core_func(**modinput_dict)
+        except Exception as e:
+            _result = traceback.format_exc()
+            _r = {}
+            exception_data = _result
+            
         _result = {'start_time':time.time(),
-                  'from':str(self._core_func),
-                  'payload':modinput_dict,
-                  'result':_r}
+                   'task_id': task_id,
+                   'from':str(self._core_func),
+                   'payload':modinput_dict,
+                   'result':_r,
+                   'exception':exception_data}
+        
         result = vikitresult.Result(_result)
         return result
     
