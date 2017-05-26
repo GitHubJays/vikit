@@ -34,6 +34,11 @@ class Welcome(object):
     def pid(self):
         """"""
         return self._id
+    
+    @property
+    def cid(self):
+        """"""
+        return self._id
         
 
 #
@@ -125,6 +130,21 @@ class Task(ClientAction):
     def cid(self):
         """"""
         return self._cid
+    
+########################################################################
+class ResultACK(ClientAction):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, _id):
+        """Constructor"""
+        self._id = _id
+    
+    @property
+    def task_id(self):
+        """"""
+        return self._id
+        
     
     
         

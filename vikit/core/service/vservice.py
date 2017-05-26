@@ -34,12 +34,55 @@ class _TaskInServer(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, task_id, cid):
+    def __init__(self, task_id, cid, vservice):
         """Constructor"""
         self._task_id = task_id
         self._cid = cid
+        self._vservice = vservice
+        assert isinstance(self._vservice, VService)
+        self._conn = vservice.get_conn_by_cid(cid)
         
-        self._STATE = client.TASK_STATE_PENDING      
+        # pri attrs
+        self._result = None
+        self._ack_flag = False
+        self._STATE = client.TASK_STATE_PENDING
+        self._retry_times = 0
+        self._waitingack = False
+        
+        #
+        # looping call to ack
+        #
+        self._loopingcall_ack = LoopingCall(self._checking_ack)
+        
+    #----------------------------------------------------------------------
+    def _checking_ack(self):
+        """""" 
+        if self.be_acked:
+            self._loopingcall_ack.stop()
+        else:
+            if self._retry_times > self._vservice.service_config.ack_retry_times:
+                self._loopingcall_ack.stop()
+            else:
+                self._retry_times = self._retry_times + 1
+                #
+                # send again
+                #
+                self.send()
+    
+    #----------------------------------------------------------------------
+    def wait_for_ack(self):
+        """"""
+        if self._waitingack:
+            pass
+        else:
+            self._loopingcall_ack.start(self._vservice.service_config.ack_timeout)
+            self._waitingack = True
+        
+    
+    @property
+    def conn(self):
+        """"""
+        return self._conn
     
     @property
     def task_id(self):
@@ -65,6 +108,42 @@ class _TaskInServer(object):
     def error(self):
         """"""
         self._STATE = client.TASK_STATE_ERROR
+    
+    #----------------------------------------------------------------------
+    def ack(self):
+        """"""
+        self._ack_flag = True
+    
+    #----------------------------------------------------------------------
+    def send(self):
+        """"""
+        assert isinstance(self._conn, VServiceTwistedConn)
+        if isinstance(self._result, actions.Result):
+            self._conn.send(obj)
+            self.wait_for_ack()
+        
+    
+    @property
+    def retry_times(self):
+        """"""
+        return self._retry_times
+    
+    @property
+    def be_acked(self):
+        """"""
+        return self._ack_flag
+    
+    @property
+    def result(self):
+        """"""
+        return self._result
+    
+    @result.setter
+    def result(self, value):
+        """"""
+        assert isinstance(value, dict)
+        self._result = actions.Result(self.task_id, value)
+        
         
     
 SERVICECONFIG_MOD_ATTRS = mod._MOD_ATTRS  
@@ -76,11 +155,13 @@ class VServiceConfig(object):
     #----------------------------------------------------------------------
     def __init__(self, min_threads=5, max_threads=20, debug=True,
                  loop_interval=0.2, adjust_interval=3, diviation_ms=100,
-                 default_mod_paths=[_CURRENT_MODS_PATH_,]):
+                 default_mod_paths=[_CURRENT_MODS_PATH_,],
+                 cryptor=None, result_update_interval=4, ack_timeout=10,
+                 ack_retry_times=5):
         """Constructor"""
         
         #
-        # set mod attrs
+        # set mod/factory attrs
         #
         self.min_threads = min_threads
         self.max_threads = max_threads
@@ -94,129 +175,322 @@ class VServiceConfig(object):
         # 
         assert isinstance(default_mod_paths, (list, tuple))
         self.default_mod_paths = default_mod_paths
-    
-    @property
-    def path(self):
-        """"""
-        return self.default_mod_paths
-
-
-
+        
+        #
+        # crytor
+        #
+        self.cryptor = cryptor
+        
+        #
+        # result update interval and ack-check/retry_times attrs
+        #
+        self.result_update_interval = result_update_interval
+        self.ack_retry_times = ack_retry_times
+        self.ack_timeout = ack_timeout
+        
 
 SERVICE_STATE_INIT = 'init'
 SERVICE_STATE_WORKING = 'working'
 SERVICE_STATE_ERROR = 'error'
 
 ########################################################################
-class VService(object):
+class VServiceAdmin(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, name, bind_port, bind_if='',
-                 config=None, cryptor=None, result_update_intervale=4,
-                 ack_timeout=10, retry_times=5):
+    def __init__(self, name, control_host, control_port, 
+                 vservice_config=None):
+        """Constructor"""
+        self._name = name
+        self._default_config = vservice_config if vservice_config else VServiceConfig()
+        assert isinstance(self._default_config, VServiceConfig)
+    
+        #
+        # platform entry
+        #
+        self._platform_client_fac = VServiceToPlatformTwistedClientFactory(self, 
+                                                                           self.default_config.cryptor)
+        
+        #
+        # running service
+        #
+        self._dict_running_service = SDict(value={})
+        
+        #
+        # service/client config
+        #
+        self._chost = control_host
+        self._cport = control_port
+    
+    @property
+    def name(self):
+        """"""
+        return self._name
+    
+    @property
+    def default_config(self):
+        """"""
+        return self._default_config
+    
+    #----------------------------------------------------------------------
+    def start_new_service(self, service_name, module_name, 
+                          bind_port, bind_if, config=None):
+        """"""
+        _config = config if config else self.default_config
+        assert isinstance(_config, VServiceConfig)
+        
+        #
+        # VService
+        #
+        _vs = VService(service_name, bind_port, bind_port, _config)
+        _vs.serve()
+        
+        self._dict_running_service[service_name] = _vs
+        
+        self._listened_port = None
+    
+    #----------------------------------------------------------------------
+    def stop_service_by_name(self, name):
+        """"""
+        _vs = self._dict_running_service.get(name)
+        if _vs:
+            assert isinstance(_vs, VService)
+            _vs.stop_serve()
+            return True
+        else:
+            return Factory
+    
+    #----------------------------------------------------------------------
+    def serve(self):
+        """"""
+        
+        self._listened_port = reactor.connectTCP(self._chost, self._cport, 
+                                                 VServiceToPlatformTwistedClientFactory(self,
+                                                                                        self._default_config.cryptor))
+    
+    #----------------------------------------------------------------------
+    def stop_serve(self):
+        """"""
+        if hasattr(self, '_listened_port'):
+            self._listened_port.connectionLost('use abort!')
+            return True
+        else:
+            return False
+    
+    @property
+    def heartbeat(self):
+        """"""
+        return actions.Hearbeat(self.name)
+
+    @property
+    def welcome(self):
+        """"""
+        return actions.Welcome(self.name)
+        
+        
+    
+    
+########################################################################
+class VService(object):
+    """
+    VService -> no state working mod
+    
+    SERVICE_STATE_INIT: mod not loaded
+    SERVICE_STATE_WORKING: mod loaded, check result and waiting ack
+    SERVICE_STATE_ERROR: error when mod loading
+    
+    """
+
+    #----------------------------------------------------------------------
+    def __init__(self, name, bind_port, bind_if='', config=None):
         """Constructor"""
         #
-        # set STATE
+        # name
+        #
+        self._name = name
+        
+        #
+        # no mod loaded
         #
         self._STATE = SERVICE_STATE_INIT
         
-        self._bind_port = bind_port
-        self._bind_if = bind_if
-        
-        self.ack_timeout = ack_timeout
-        self.retry_times = retry_times
-        
         #
-        # config by VServiceConfig
+        # bind attr
         #
-        self.config(config)
-        assert hasattr(self, "_factory_config")
+        self.bind_port = bind_port
+        self.bind_if = bind_if
         
         #
-        # cid -> conn 
-        # task_id -> _TaskInService
+        # config
         #
-        self.CID_MAP_CONN = SDict(value={}, 
-                                  new_kv_callback=self._when_new_conn_added)
-        self.TASKID_MAP_TASKENTITY = SDict(value={}, 
-                                           new_kv_callback=self._when_new_task_added)
-        self.TASK_RESULT = SDict(value={},
-                                 new_kv_callback=self._when_result_added)
-        self.TASK_WAITING_ACK = SDict(value={})
+        self.service_config = VServiceConfig() if config == None else config
+        assert isinstance(self.service_config, VServiceConfig)
         
         #
-        # build mod factory
+        # init factroy
         #
-        self.mod_factory = mod.ModFactory(**self._factory_config)
+        self.mod_factory = None
+        self.config_factory()
+        assert isinstance(self.mod_factory, mod.ModFactory)
         
         #
-        # set result trigger
+        # record 1. cid to conn
+        #        2. task_id to entity
         #
-        self._result_update_intervale = result_update_intervale
-        self._start_collect_flag = False
+        self._dict_cid2conn = SDict(value={})
+        self._dict_taskid2taskentity = SDict(value={})
+        
+        #
+        # prepare 1. collect result loopingcall
+        #         
+        #
+        self._loopingcall_collecting_result = LoopingCall(self._collecting_result)
+
+        #
+        # listend_port
+        #
+        self._listened_port = None
     
+    #
+    # property
+    #
+    #----------------------------------------------------------------------
+    def name(self):
+        """"""
+        return self._name
     
     #----------------------------------------------------------------------
-    def config(self, config):
+    def config_factory(self):
         """"""
-        if config:
-            pass
-        else:
-            config = VServiceConfig(min_threads=5, max_threads=20, debug=True, 
-                                   loop_interval=0.2, 
-                                   adjust_interval=3, 
-                                   diviation_ms=100, 
-                                   default_mod_paths=[_CURRENT_MODS_PATH_,])
+        #
+        # extract attrs 
+        #
+        _ = {}
+        for i in mod._MOD_ATTRS:
+            _[i] = getattr(self.service_config, i)
         
-        #
-        # create factory config attr
-        #
-        self._factory_config = {}
-        for i in SERVICECONFIG_MOD_ATTRS:
-            self._factory_config[i] = getattr(config, i)
-            
-        #
-        # add extra sys path
-        #
-        for i in config.path:
-            sys.path.append(i)
+        self.mod_factory = mod.ModFactory(**_)
     
-    @property
-    def state(self):
+    #
+    # switch state
+    #
+    #----------------------------------------------------------------------
+    def error(self):
         """"""
-        return self._STATE
+        self._STATE = SERVICE_STATE_ERROR
     
     #----------------------------------------------------------------------
-    def load_mod_from_module(self, module_name):
+    def working(self):
         """"""
-        #
-        # load module -> change state
-        #
-        try:
-            _modobj = __import__(module_name)
-        except ImportError:
-            self._STATE = SERVICE_STATE_ERROR
-            return False
-        
-        assert isinstance(_modobj, types.ModuleType)
-        
-        #
-        # produce a mod
-        #
-        try:
-            self._mod = self.mod_factory.build_standard_mod_from_module(_modobj)
-        except Exception as e:
-            #
-            # load error
-            #
-            self._STATE = SERVICE_STATE_ERROR
-            return False
-        
         self._STATE = SERVICE_STATE_WORKING
-        return True
-    
         
+        #
+        # start loopingcall
+        #
+        self.start_collecing_result()
+    
+    #----------------------------------------------------------------------
+    def quit(self):
+        """"""  
+        #
+        # stop server
+        #     
+        if self._listened_port:
+            self._listened_port.connectionLost('normal quit')
+        
+        #
+        # close mod
+        #
+        _mod = self.mod
+        assert isinstance(_mod, mod.ModStandard)
+        _mod.close()
+        
+        # reset priv
+        self._STATE = SERVICE_STATE_INIT
+        self.stop_collecting_result()
+        self._dict_cid2conn = SDict(value={})
+        self._dict_taskid2taskentity = SDict(value={})
+    
+    
+    #
+    # op build-in dict
+    #
+    #----------------------------------------------------------------------
+    def get_task_by_id(self, task_id):
+        """"""
+        return self._dict_taskid2taskentity.get(task_id)
+    
+    #----------------------------------------------------------------------
+    def get_conn_by_cid(self, cid):
+        """"""
+        return self._dict_cid2conn.get(cid)
+    
+    #----------------------------------------------------------------------
+    def add_task(self, task_entity):
+        """"""
+        assert isinstance(task_entity, _TaskInServer)
+        self._dict_taskid2taskentity[task_entity.task_id] = task_entity
+    
+    #----------------------------------------------------------------------
+    def bind_conn(self, cid, conn):
+        """"""
+        assert isinstance(conn, VServiceTwistedConn)
+        self._dict_cid2conn[cid] = conn
+    
+    #----------------------------------------------------------------------
+    def remove_conn(self, cid):
+        """"""
+        del self._dict_cid2conn[cid]
+        
+    #
+    # loopingcall task trigger
+    #
+    #----------------------------------------------------------------------
+    def start_collecing_result(self):
+        """"""
+        
+        self._loopingcall_collecting_result.start(self.service_config.result_update_interval)
+    
+    #----------------------------------------------------------------------
+    def stop_collecting_result(self):
+        """"""
+        self._loopingcall_collecting_result.stop()
+    
+    #
+    # loopingcall task core
+    #
+    #----------------------------------------------------------------------
+    def _collecting_result(self):
+        """"""
+        _q = self.mod.result_queue
+        while True:
+            try:
+                _r = _q.get_nowait()
+            except queue.Empty:
+                break
+            
+            _tid = _r.get('task_id')
+            _tins = self.get_task_by_id(task_id)
+            assert isinstance(_tins, _TaskInServer)
+            
+            _tins.result = _r
+            _tins.send()
+    
+    #
+    # mod 
+    #
+    #----------------------------------------------------------------------
+    def load_mod(self, module_name):
+        """"""
+        _obj = None
+        try:
+            _obj = __import__(module_name)
+        except ImportError:
+            self.error()
+        
+        if _obj:
+            self._mod = self.mod_factory.build_standard_mod_from_module(_obj)
+    
     @property
     def mod(self):
         """"""
@@ -224,149 +498,60 @@ class VService(object):
             return self._mod
         else:
             return None
-            
-    #----------------------------------------------------------------------
-    def _when_new_conn_added(self, cid, conn):
-        """"""
-        
-    #----------------------------------------------------------------------
-    def _when_new_task_added(self, task_id, task_in_service_obj):
-        """"""
-        
-    #----------------------------------------------------------------------
-    def _when_result_added(self, task_id, result):
-        """"""
-        #
-        # get _taskInServer
-        #
-        _task = self.TASKID_MAP_TASKENTITY.get(task_id)
-        
-        #
-        # get conn and result
-        #
-        conn = self.CID_MAP_CONN.get(_task.cid)
-        _result = actions.Result(task_id, dict_obj=result)
-        
-        #
-        # add ack buffer and send result
-        #
-        self.wait_for_ack(task_id, _result, conn)
-        conn.send(_result)
-    
-    #----------------------------------------------------------------------
-    def wait_for_ack(self, task_id, result_obj, conn, check_timeout):
-        """"""
-        self.TASK_WAITING_ACK[task_id] = {}
-        self.TASK_WAITING_ACK[task_id]['connection'] = conn
-        self.TASK_WAITING_ACK[task_id]['result_obj'] = result_obj
-        self.TASK_WAITING_ACK[task_id]['retry'] = 0
-        
-
-    #----------------------------------------------------------------------
-    def ack_task(self):
-        """"""
-        self._ack_task(task_id)
-    
-    #----------------------------------------------------------------------
-    def _ack_task(self, task_id):
-        """"""
-        if self.TASK_WAITING_ACK.has_key(task_id):
-            del self.TASK_WAITING_ACK[task_id]
-    
-    #----------------------------------------------------------------------
-    def finish_task(self, task_id):
-        """"""
-        self.clear_task(task_id)
-    
-    #----------------------------------------------------------------------
-    def clear_task(self, task_id):
-        """"""
-        del self.TASKID_MAP_TASKENTITY[task_id]
-        del self.TASK_RESULT[task_id]
-        del self.TASK_WAITING_ACK[task_id]
-    
     
     #
-    # with a interval to check_ack/update_result
+    # serve/abort
     #
     #----------------------------------------------------------------------
-    def _check_ack_arrival(self, conn):
+    def serve(self):
         """"""
-        for i in self.TASK_WAITING_ACK.iteritems():
-            task_id = i[0]
-            conn = i[1].get('connection')
-            result_obj = i[1].get('result_obj')
-            retry_count = i[1].get('retry')
-            
-            try:
-                assert self.TASKID_MAP_TASKENTITY.has_key(task_id)
-                assert self.TASK_WAITING_ACK.has_key(task_id)
-                assert self.TASK_RESULT.has_key(task_id)
-            except AssertionError:
-                continue
-            
-            if retry_count <= self.retry_times:
-                conn.send(result_obj)
-                self.TASK_WAITING_ACK[task_id]["retry"] = retry_count + 1
-            else:
-                self.clear_task(task_id)
-            
+        self._listened_port = reactor.listenTCP(self.bind_port, 
+                                                VServiceTwistedConnFactory(self,
+                                                                           self.service_config.cryptor))
     #----------------------------------------------------------------------
-    def _update_result(self):
+    def stop_serve(self):
         """"""
-        _mod = self.mod
-        assert isinstance(_mod, mod.ModStandard)
+        self.quit()
+    
+    #
+    # task function
+    #
+    #----------------------------------------------------------------------
+    def execute_task(self, cid, task_id, param):
+        """"""
+        assert hasattr(self, '_mod'), 'vservice has to be loaded from module'
+    
+        #
+        # add _taskInServer
+        #
+        _t = _TaskInServer(task_id, cid, self)
+        self.add_task(_t)
         
-        _queue = _mod.result_queue
-        while True:
-            try:
-                _r = _queue.get_nowait()
-            except queue.Empty:
-                break
-            
-            task_id = _r.get('task_id')
-            self.TASK_RESULT[task_id] = _r
+        #
+        # execute it
+        #
+        self._mod.execute(param, task_id)
+        
+        #
+        # waiting for ack
+        #
+        _t.wait_for_ack()
     
     #----------------------------------------------------------------------
-    def execute(self, cid, task_id, params):
+    def ack_task(self, task_id):
         """"""
-        _mod = self.mod
-        
-        #
-        # build _TaskInService
-        #
-        _t = _TaskInServer(task_id, cid)
-        self.TASKID_MAP_TASKENTITY[task_id] = _t
-        
-        if isinstance(_mod, mod.ModStandard):
-            _mod.execute(params, task_id)
-        
-        #
-        # start collecting result
-        #
-        if not self._start_collect_flag:
-            self.start_collecting_result(self._result_update_intervale)
-            self._start_collect_flag = True
-        
-        #
-        # start check ack
-        #
-        if not self._start_checking_ack:
-            self.start_checking_ack(self.ack_timeout)
-            self._start_checking_ack = True
+        _t = self._dict_taskid2taskentity.get(task_id)
+        if _t:
+            assert isinstance(_t, _TaskInServer)
+            _t.ack()
+            del self._dict_taskid2taskentity[task_id]
     
     #----------------------------------------------------------------------
-    def start_checking_ack(self, interval):
+    def abandon_task(self, task_id):
         """"""
-        self._start_checking_ack_loopingcall = LoopingCall(self._check_ack_arrival)
-        self._start_checking_ack_loopingcall.start(interval)
-    
-    #----------------------------------------------------------------------
-    def start_collecting_result(self, interval):
-        """"""
-        self._result_update_loopingcall = LoopingCall(self._update_result)
-        self._result_update_loopingcall.start(interval)
-    
+        self.ack_task(task_id)
+        
+        
     
 
 ########################################################################
@@ -377,13 +562,24 @@ class VServiceTwistedConn(Protocol):
     def __init__(self, vservice, cryptor=None):
         """Constructor"""
         
-        assert isinstance(vservice, VService)
         self._service = vservice
+        assert isinstance(vservice, VService)
         
         self._cryptor = cryptor
         self.serlzr = Serializer(self._cryptor)
         
         self.STATE = 'init'
+        
+        #
+        # priv
+        #
+        self._cid = ''
+    
+    #----------------------------------------------------------------------
+    def connectionLost(self):
+        """"""
+        self._service.remove_conn(self._cid)
+        
     
     #----------------------------------------------------------------------
     def dataReceived(self, data):
@@ -398,30 +594,49 @@ class VServiceTwistedConn(Protocol):
         """"""
         if self.STATE == 'init':
             if isinstance(obj, actions.Welcome):
-                #
-                # welcome 
-                #
+                self.handle_welcome(obj)
                 self.STATE = 'working'
-                self._service.add_bind(obj.cid, self)
-
             
         if self.STATE == 'working':
-            if isinstance(obj, actions.QueryTaskStatus):
+            if isinstance(obj, actions.Task):
                 #
-                # query task status
+                # handle task
                 #
-                _t = self._service.get_task_status(obj.task_id)
-                self.send(_t)
-            elif isinstance(obj, actions.Task):
+                self.handle_task(obj)
+            elif isinstance(obj, actions.ResultACK):
                 #
-                # 1. receive task
-                # 2. feedback ack
+                # handle result ack
                 #
-                self._service.execute(obj)
-                task_ack_obj = self._service.get_task_ack(obj.task_id)
-                self.send(task_ack_obj)
+                self.handle_resultACK(obj)
     
+    #----------------------------------------------------------------------
+    def handle_resultACK(self, obj):
+        """"""
+        #assert isinstance(obj, actions.ResultACK)
+        self._service.ack_task(obj.task_id)
     
+    #----------------------------------------------------------------------
+    def handle_task(self, task_obj):
+        """"""
+        #assert isinstance(task_obj, actions.Task)
+        
+        cid = self._cid
+        task_id = task_obj.task_id
+        params = task_obj.params
+        #assert isinstance(params, dict)
+        
+        self._service.execute_task(cid, task_id, params)
+        
+    
+    #----------------------------------------------------------------------
+    def handle_welcome(self, obj):
+        """"""
+        #
+        # process welcome
+        #
+        #assert isinstance(obj, actions.Welcome)
+        self._service.bind_conn(obj.cid, self) 
+        self._cid = obj.cid
     
     #----------------------------------------------------------------------
     def send(self, obj):
@@ -457,7 +672,7 @@ class VServiceToPlatformTwistedClient(Protocol):
     #----------------------------------------------------------------------
     def __init__(self, vservice, cryptor=None):
         """Constructor"""
-        assert isinstance(vservice, VService)
+        assert isinstance(vservice, VServiceAdmin)
         self._service = vservice
         
         self._cryptor = cryptor
@@ -484,11 +699,7 @@ class VServiceToPlatformTwistedClient(Protocol):
             assert isinstance(obj, actions.Welcome)
             
             self.STATE = 'working'
-            #
-            # proce3ss welcome
-            # 1. start heartbeat
-            #
-            self._start_heartbeat()
+            self.handle_welcome(obj)
             
         
         if self.STATE == 'working':
@@ -503,6 +714,15 @@ class VServiceToPlatformTwistedClient(Protocol):
                 # confirm platform running
                 #
                 pass
+    
+    #----------------------------------------------------------------------
+    def handle_welcome(self, obj):
+        """"""
+        #
+        # process welcome
+        # 1. start heartbeat
+        #
+        self._start_heartbeat()        
     
     #----------------------------------------------------------------------
     def _start_heartbeat(self, interval=4):

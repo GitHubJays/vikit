@@ -7,7 +7,12 @@
 """
 
 from vikit.core.service import vservice
+from twisted.internet import reactor
 
-vserver = vservice.VService(module_name=None, control_host='127.0.0.1', control_port=7001, 
-                           bind_port=7003)
-vserver.serve()
+sadmin = vservice.VServiceAdmin(name='test', control_host='127.0.0.1', control_port=7001)
+
+sadmin.serve()
+
+sadmin.start_new_service(service_name='demo', module_name='demo', bind_port=7004, bind_if='')
+
+reactor.run()
