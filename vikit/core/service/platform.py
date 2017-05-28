@@ -52,6 +52,9 @@ class Platform(object):
         #
         actions.StopService(service_id)
     
+    #
+    # add bind and remove bind
+    #
     #----------------------------------------------------------------------
     def add_bind(self, service_id, conn):
         """"""
@@ -59,6 +62,15 @@ class Platform(object):
             raise AssertionError('repeat service id!')
         else:
             self._conn_pool[service_id] = conn
+    
+    #----------------------------------------------------------------------
+    def remove_bind(self, service_id):
+        """"""
+        if self._conn_pool.has_key(service_id):
+            del self._conn_pool[service_id]
+        else:
+            pass
+        
 
     #----------------------------------------------------------------------
     def update_heartbeat(self, obj):
@@ -99,6 +111,11 @@ class PlatformTwistedConn(Protocol):
         self.send(actions.Welcome(self._platform.name))
     
     #----------------------------------------------------------------------
+    def connectionLost(self, reason=''):
+        """"""
+        self._platform.remove_bind(self._sid)
+    
+    #----------------------------------------------------------------------
     def dataReceived(self, data):
         """"""
         
@@ -116,7 +133,12 @@ class PlatformTwistedConn(Protocol):
                 # welcome 
                 #
                 self.STATE = 'working'
+                
+                #
+                # add bind and record sid
+                #
                 self._platform.add_bind(obj.sid, self)
+                self._sid = obj.sid
             
         if self.STATE == 'working':
             if isinstance(obj, actions.Hearbeat):

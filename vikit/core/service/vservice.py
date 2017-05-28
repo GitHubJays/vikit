@@ -59,9 +59,11 @@ class _TaskInServer(object):
         """""" 
         if self.be_acked:
             self._loopingcall_ack.stop()
+            #pass
         else:
             if self._retry_times > self._vservice.service_config.ack_retry_times:
                 self._loopingcall_ack.stop()
+                #pass
             else:
                 self._retry_times = self._retry_times + 1
                 #
@@ -75,8 +77,11 @@ class _TaskInServer(object):
         if self._waitingack:
             pass
         else:
-            self._loopingcall_ack.start(self._vservice.service_config.ack_timeout)
             self._waitingack = True
+            
+            interval = self._vservice.service_config.ack_timeout
+            self._loopingcall_ack.start(interval)
+            
         
     
     @property
@@ -119,7 +124,7 @@ class _TaskInServer(object):
         """"""
         assert isinstance(self._conn, VServiceTwistedConn)
         if isinstance(self._result, actions.Result):
-            self._conn.send(obj)
+            self._conn.send(self.result)
             self.wait_for_ack()
         
     
@@ -242,12 +247,20 @@ class VServiceAdmin(object):
         #
         # VService
         #
-        _vs = VService(service_name, bind_port, bind_port, _config)
+        _vs = VService(service_name, bind_port, bind_if, _config)
+        _vs.load_mod(module_name)
         _vs.serve()
+        _vs.working()
         
+        #
+        # add vservice to dict
+        #
         self._dict_running_service[service_name] = _vs
         
-        self._listened_port = None
+        
+        
+        
+        
     
     #----------------------------------------------------------------------
     def stop_service_by_name(self, name):
@@ -354,7 +367,7 @@ class VService(object):
     #
     # property
     #
-    #----------------------------------------------------------------------
+    @property
     def name(self):
         """"""
         return self._name
@@ -440,7 +453,10 @@ class VService(object):
     #----------------------------------------------------------------------
     def remove_conn(self, cid):
         """"""
-        del self._dict_cid2conn[cid]
+        if self._dict_cid2conn.value.has_key(cid):
+            del self._dict_cid2conn[cid]
+        else:
+            pass
         
     #
     # loopingcall task trigger
@@ -462,18 +478,21 @@ class VService(object):
     #----------------------------------------------------------------------
     def _collecting_result(self):
         """"""
+        print('collecting result!')
         _q = self.mod.result_queue
+        assert isinstance(_q, queue.Queue)
         while True:
             try:
                 _r = _q.get_nowait()
+                print("Got Result: {}".format(_r))
             except queue.Empty:
                 break
             
-            _tid = _r.get('task_id')
-            _tins = self.get_task_by_id(task_id)
+            _tid = _r._dict_obj.get('task_id')
+            _tins = self.get_task_by_id(_tid)
             assert isinstance(_tins, _TaskInServer)
             
-            _tins.result = _r
+            _tins.result = _r._dict_obj
             _tins.send()
     
     #
@@ -490,6 +509,8 @@ class VService(object):
         
         if _obj:
             self._mod = self.mod_factory.build_standard_mod_from_module(_obj)
+        else:
+            self._mod = None
     
     @property
     def mod(self):
@@ -533,12 +554,14 @@ class VService(object):
         self._mod.execute(param, task_id)
         
         #
-        # waiting for ack
+        # ack task
         #
-        _t.wait_for_ack()
+        conn = self.get_conn_by_cid(cid)
+        conn.send(actions.TaskACK(task_id))
+        
     
     #----------------------------------------------------------------------
-    def ack_task(self, task_id):
+    def ack_result(self, task_id):
         """"""
         _t = self._dict_taskid2taskentity.get(task_id)
         if _t:
@@ -549,7 +572,7 @@ class VService(object):
     #----------------------------------------------------------------------
     def abandon_task(self, task_id):
         """"""
-        self.ack_task(task_id)
+        self.ack_result(task_id)
         
         
     
@@ -576,8 +599,15 @@ class VServiceTwistedConn(Protocol):
         self._cid = ''
     
     #----------------------------------------------------------------------
-    def connectionLost(self):
+    def connectionMade(self):
         """"""
+        print('Made connect!')
+        self.send(actions.Welcome(self._service.name))
+    
+    #----------------------------------------------------------------------
+    def connectionLost(self, reason=''):
+        """"""
+        print('Lost connect: {}'.format(self._cid))
         self._service.remove_conn(self._cid)
         
     
@@ -587,7 +617,7 @@ class VServiceTwistedConn(Protocol):
         
         obj = self.serlzr.unserialize(data)
         
-        self._handler_obj(obj)    
+        self._handle_obj(obj)    
 
     #----------------------------------------------------------------------
     def _handle_obj(self, obj):
@@ -613,7 +643,7 @@ class VServiceTwistedConn(Protocol):
     def handle_resultACK(self, obj):
         """"""
         #assert isinstance(obj, actions.ResultACK)
-        self._service.ack_task(obj.task_id)
+        self._service.ack_result(obj.task_id)
     
     #----------------------------------------------------------------------
     def handle_task(self, task_obj):
@@ -624,7 +654,7 @@ class VServiceTwistedConn(Protocol):
         task_id = task_obj.task_id
         params = task_obj.params
         #assert isinstance(params, dict)
-        
+        print('Receive a task: {}, from: {}, params: {}'.format(task_id, cid, params))
         self._service.execute_task(cid, task_id, params)
         
     
@@ -632,9 +662,10 @@ class VServiceTwistedConn(Protocol):
     def handle_welcome(self, obj):
         """"""
         #
-        # process welcome
+        # process welcome 
         #
-        #assert isinstance(obj, actions.Welcome)
+        assert isinstance(obj, actions.Welcome)
+        assert obj.cid != ''
         self._service.bind_conn(obj.cid, self) 
         self._cid = obj.cid
     
@@ -644,6 +675,7 @@ class VServiceTwistedConn(Protocol):
         #
         # send to peer service
         #
+        #print(obj)
         text = self.serlzr.serialize(obj)
         self.transport.write(text)
 

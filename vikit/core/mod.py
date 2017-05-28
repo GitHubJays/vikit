@@ -428,7 +428,7 @@ class ModFactory(object):
             v = kv[1]
             
             if _r.has_key(k):
-                _r = v
+                _r[k] = v
             else:
                 pass
         

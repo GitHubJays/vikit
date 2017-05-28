@@ -47,6 +47,7 @@ class _TaskInClient(object):
         self._retry_times = 0
         self._waitingack = False
         self._result = None
+        self._finished = False
         
         #
         # loopingcall ack
@@ -134,6 +135,11 @@ class _TaskInClient(object):
         assert isinstance(value, dict)
         self._result = result.Result(value)
         self._conn.send(actions.ResultACK(self.task_id))
+    
+    #----------------------------------------------------------------------
+    def finish(self):
+        """"""
+        self._finished = True
         
         
         
@@ -163,7 +169,7 @@ class VClient(object):
         #
         # client id (Client+uuid)
         #
-        self._cid = 'Client-' + uuid.uui1().hex
+        self._cid = 'Client-' + uuid.uuid1().hex
         
         #
         # service port
@@ -192,6 +198,11 @@ class VClient(object):
         #
         self._dict_taskid_2_taskinclient = SDict(value={})
         
+        #
+        # bind conn
+        #
+        self._conn = None
+        
         
     @property
     def cid(self):
@@ -213,7 +224,8 @@ class VClient(object):
         rport = rport if rport else self._rport
         crypt = crypto if crypto else self._cryptor
         
-        self._connection = reactor.connectTCP(host, port, )
+        self._connection = reactor.connectTCP(rhost, rport, VClientTwistedConnFactory(
+                                                                                     self))
     
     #----------------------------------------------------------------------
     def disconnect(self):
@@ -253,6 +265,7 @@ class VClient(object):
         _t = self.get_task(result.task_id)
         assert isinstance(_t, _TaskInClient)
         _t.result = result_value
+        _t.finish()
     
     #----------------------------------------------------------------------
     def ack_task(self, task_id):
@@ -264,6 +277,12 @@ class VClient(object):
         assert isinstance(_t, _TaskInClient)
         _t.ack()
     
+    #----------------------------------------------------------------------
+    def bind_conn(self, conn):
+        """"""
+        self._conn = conn
+        
+    
 
 
 ########################################################################
@@ -271,18 +290,19 @@ class VClientTwistedConn(Protocol):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, vclient, cryptor=None):
+    def __init__(self, vclient):
         """Constructor"""
         #
-        # set vclient
+        # set vclient and bind conn
         #
         assert isinstance(vclient, VClient)
         self._vclient = vclient
+        self._vclient.bind_conn(self)
         
         #
         # set cryptor
         #
-        self._cryptor = cryptor
+        self._cryptor = self._vclient.client_config.cryptor
         self.serlzr = serializer.Serializer(self._cryptor)
         
         #
@@ -290,6 +310,20 @@ class VClientTwistedConn(Protocol):
         #
         self.STATE = 'init'
         
+        #
+        # set cid
+        #
+        self._cid = self._vclient.cid
+    
+    @property
+    def cid(self):
+        """"""
+        return self._cid
+    
+    #----------------------------------------------------------------------
+    def connectionMade(self):
+        """"""
+        self.send(actions.Welcome(self.cid))
     
     #----------------------------------------------------------------------
     def dataReceived(self, data):
@@ -300,6 +334,7 @@ class VClientTwistedConn(Protocol):
     #----------------------------------------------------------------------
     def _handle_obj(self, obj):
         """"""
+        print(obj)
         if self.STATE == 'init':
             assert isinstance(obj, actions.Welcome)
             self.STATE = 'working'
@@ -323,14 +358,43 @@ class VClientTwistedConn(Protocol):
     #----------------------------------------------------------------------
     def handle_result(self, obj):
         """"""
+        print('Receive Result: {}'.format(obj.task_id))
         self._vclient.receive_result(obj)
 
  
     #----------------------------------------------------------------------
     def handle_TaskACK(self, obj):
         """"""
-        assert isinstance(obj, actions.TaskACK)
+        print('Receive TaskACK: {}'.format(obj.task_id))
+        #assert isinstance(obj, actions.TaskACK)
         self._vclient.ack_task(obj.task_id)
     
+    #----------------------------------------------------------------------
+    def send(self, obj):
+        """"""
+        #
+        # send to peer service
+        #
+        text = self.serlzr.serialize(obj)
+        self.transport.write(text)    
+
+    
+########################################################################
+class VClientTwistedConnFactory(ClientFactory):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, vclient):
+        """Constructor"""
+        assert isinstance(vclient, VClient), 'not a valid vclient instance'
+        self._vclient = vclient
+    
+    #----------------------------------------------------------------------
+    def buildProtocol(self, addr):
+        """"""
+        return VClientTwistedConn(self._vclient)
+        
+        
+        
     
     
