@@ -15,4 +15,8 @@ sadmin.serve()
 
 sadmin.start_new_service(service_name='demo', module_name='demo', bind_port=7004, bind_if='')
 
+reactor.callLater(5, sadmin.stop_service_by_name, *('demo',))
+reactor.callLater(8, sadmin.stop_serve)
+reactor.callLater(8, reactor.stop)
+
 reactor.run()

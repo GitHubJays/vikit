@@ -257,6 +257,11 @@ class VClient(object):
         return self._dict_taskid_2_taskinclient.get(task_id)
     
     #----------------------------------------------------------------------
+    def get_tasks(self):
+        """"""
+        return self._dict_taskid_2_taskinclient
+    
+    #----------------------------------------------------------------------
     def receive_result(self, result):
         """"""
         if isinstance(result, actions.Result):
@@ -334,7 +339,6 @@ class VClientTwistedConn(Protocol):
     #----------------------------------------------------------------------
     def _handle_obj(self, obj):
         """"""
-        print(obj)
         if self.STATE == 'init':
             assert isinstance(obj, actions.Welcome)
             self.STATE = 'working'
@@ -358,14 +362,12 @@ class VClientTwistedConn(Protocol):
     #----------------------------------------------------------------------
     def handle_result(self, obj):
         """"""
-        print('Receive Result: {}'.format(obj.task_id))
         self._vclient.receive_result(obj)
 
  
     #----------------------------------------------------------------------
     def handle_TaskACK(self, obj):
         """"""
-        print('Receive TaskACK: {}'.format(obj.task_id))
         #assert isinstance(obj, actions.TaskACK)
         self._vclient.ack_task(obj.task_id)
     

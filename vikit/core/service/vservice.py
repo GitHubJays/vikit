@@ -478,13 +478,11 @@ class VService(object):
     #----------------------------------------------------------------------
     def _collecting_result(self):
         """"""
-        print('collecting result!')
         _q = self.mod.result_queue
         assert isinstance(_q, queue.Queue)
         while True:
             try:
                 _r = _q.get_nowait()
-                print("Got Result: {}".format(_r))
             except queue.Empty:
                 break
             
@@ -601,13 +599,11 @@ class VServiceTwistedConn(Protocol):
     #----------------------------------------------------------------------
     def connectionMade(self):
         """"""
-        print('Made connect!')
         self.send(actions.Welcome(self._service.name))
     
     #----------------------------------------------------------------------
     def connectionLost(self, reason=''):
         """"""
-        print('Lost connect: {}'.format(self._cid))
         self._service.remove_conn(self._cid)
         
     
@@ -654,7 +650,6 @@ class VServiceTwistedConn(Protocol):
         task_id = task_obj.task_id
         params = task_obj.params
         #assert isinstance(params, dict)
-        print('Receive a task: {}, from: {}, params: {}'.format(task_id, cid, params))
         self._service.execute_task(cid, task_id, params)
         
     
@@ -675,7 +670,6 @@ class VServiceTwistedConn(Protocol):
         #
         # send to peer service
         #
-        #print(obj)
         text = self.serlzr.serialize(obj)
         self.transport.write(text)
 

@@ -315,6 +315,12 @@ class VikitTester(unittest.TestCase):
         _r = _q.get()
         assert isinstance(_r, result.Result)
     
+    #----------------------------------------------------------------------
+    def test_ack_data(self):
+        """"""
+        
+        
+    
     
     
 

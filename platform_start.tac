@@ -31,7 +31,6 @@ platform_obj = Platform(name='platform', host='asdf', port='8123')
 
 _fac = PlatformTwistedConnFactory(platform_obj)
 
-
 #
 # app
 #
