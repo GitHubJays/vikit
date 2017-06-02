@@ -8,6 +8,8 @@
 
 from __future__ import unicode_literals
 
+from twisted.internet import reactor
+
 import unittest
 import time
 
@@ -33,6 +35,7 @@ from vikit.core.basic import modmanager
 from vikit.core.basic import service
 from vikit.core.basic import serializer
 from vikit.core.platform import platform_entity
+from vikit.core.common import ackpool
 
 
 class Test(object):
@@ -317,15 +320,15 @@ class VikitTester(unittest.TestCase):
         assert isinstance(_r, result.Result)
     
     #----------------------------------------------------------------------
-    def test_platform(self):
+    def test_ackpool(self):
         """"""
-        
-        pltfrm = platform_entity.Platform()
-        pltfrm.update()
-    
-    
-    
-
+        pool = ackpool.ACKPool()
+        count = 1
+        def test():
+            print('Executing Looping call')
+            
+        pool.add('sdfasd', test, ack_timeout=3)
+        pool.ack('sdfasd')
         
         
 if __name__ == '__main__':

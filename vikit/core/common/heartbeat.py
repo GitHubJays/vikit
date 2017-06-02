@@ -23,9 +23,14 @@ class Heartbeat(ActionBase):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, id, service_state, ):
+    def __init__(self, id, service_state, self_state):
         """Constructor"""
+        self._id = id
         
-        
+    
+    @property
+    def id(self):
+        """"""
+        return self._id
     
     
