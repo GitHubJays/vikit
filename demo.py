@@ -8,8 +8,8 @@
 
 import time
 
-from vikit.core.modinput import TargetDemand, PayloadDemand, ParamDemand
-from vikit.core import target, payload, param
+from vikit.core.basic.modinput import TargetDemand, PayloadDemand, ParamDemand
+from vikit.core.basic import target, payload, param
 
 
 NAME = 'demo'

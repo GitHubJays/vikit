@@ -11,27 +11,28 @@ from __future__ import unicode_literals
 import unittest
 import time
 
-from vikit.core.target import Target, TargetEnum, \
+from vikit.core.basic.target import Target, TargetEnum, \
      TYPE_IPV4, TYPE_IPV6, TYPE_NETLOC, \
      TYPE_URL, TYPE_RAW, TYPE_AUTO, TYPE_FILE
 
-from vikit.core.payload import Payload, PayloadEnum, TYPE_TEXT, TYPE_FILE
-from vikit.core.mixer import mixer
-from vikit.core.param import Param, \
+from vikit.core.basic.payload import Payload, PayloadEnum, TYPE_TEXT, TYPE_FILE
+from vikit.core.basic.mixer import mixer
+from vikit.core.basic.param import Param, \
      TYPE_JSON, \
      TYPE_INT, TYPE_STR, TYPE_BOOL, TYPE_FLOAT, \
      TYPE_ENUM, TYPE_BYTES, \
      ParamSet
 
-from vikit.core.modinput import ModInput, TargetDemand, PayloadDemand, ParamDemand
-from vikit.core.mod import ModBasic, ModStandard, ModFactory
+from vikit.core.basic.modinput import ModInput, TargetDemand, PayloadDemand, ParamDemand
+from vikit.core.basic.mod import ModBasic, ModStandard, ModFactory
 
-from vikit.dbm import kvpersist
-from vikit.core import result
-from vikit.core import utils
-from vikit.core import modmanager
-from vikit.core import service
-from vikit.core.service import serializer
+from vikit.core.dbm import kvpersist
+from vikit.core.basic import result
+from vikit.core.basic import utils
+from vikit.core.basic import modmanager
+from vikit.core.basic import service
+from vikit.core.basic import serializer
+from vikit.core.platform import platform_entity
 
 
 class Test(object):
@@ -316,10 +317,11 @@ class VikitTester(unittest.TestCase):
         assert isinstance(_r, result.Result)
     
     #----------------------------------------------------------------------
-    def test_ack_data(self):
+    def test_platform(self):
         """"""
         
-        
+        pltfrm = platform_entity.Platform()
+        pltfrm.update()
     
     
     

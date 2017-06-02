@@ -378,7 +378,9 @@ class VClientTwistedConn(Protocol):
         # send to peer service
         #
         text = self.serlzr.serialize(obj)
-        self.transport.write(text)    
+        self.transport.write(text)
+
+
 
     
 ########################################################################
@@ -396,6 +398,16 @@ class VClientTwistedConnFactory(ClientFactory):
         """"""
         return VClientTwistedConn(self._vclient)
         
+        
+        
+    
+########################################################################
+class VClientToPlatformTwistedClient(Protocol):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
         
         
     
