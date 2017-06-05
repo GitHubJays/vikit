@@ -21,7 +21,7 @@ class VikitProtocol(Protocol):
     #----------------------------------------------------------------------
     def __init__(self):
         """"""
-        self.set_cryptor()
+        self.init_cryptor()
     
     #----------------------------------------------------------------------
     def dataReceived(self, data):
@@ -31,7 +31,7 @@ class VikitProtocol(Protocol):
         self.objReceived(obj)
     
     #----------------------------------------------------------------------
-    def set_cryptor(self):
+    def init_cryptor(self):
         """"""
         raise NotImplemented()
     

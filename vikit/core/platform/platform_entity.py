@@ -238,6 +238,11 @@ class Platform(Singleton):
         self._port = port if port else DEFAULT_PORT
         self._nif = net_if if net_if else ''
     
+    @property 
+    def id(self):
+        """"""
+        return self._id
+    
     #
     # start successfully
     #
@@ -288,7 +293,18 @@ class Platform(Singleton):
     def stop_service(self, service_id):
         """"""
         self.service_pool.stop_service(service_id)
+     
+   
+    @fsm.onstate(state_RUNNING)
+    def get_available_service(self):
+        """"""
+        raise NotImplemented()
     
+    @fsm.onstate(state_RUNNING)
+    def get_running_service(self):
+        """"""
+        raise NotImplemented()
+        
     
     #
     # before start
