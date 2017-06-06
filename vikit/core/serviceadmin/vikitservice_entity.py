@@ -13,6 +13,7 @@ from twisted.internet.task import LoopingCall
 
 from ..basic import mod, result
 from ..common import baseprotocol
+from ..utils import getuuid
 
 #
 # client relavent
@@ -126,6 +127,12 @@ class _VikitClientPool(object):
         assert not self._client_map.has_key(id)
         self._client_map[id] = _retclient
     
+    #----------------------------------------------------------------------
+    def unregist_client(self, client_id):
+        """"""
+        if self._client_map.has_key(client_id):
+            del self._client_map[client_id]
+        
     
     #----------------------------------------------------------------------
     def regist_task(self, client_id, task_id, params):
@@ -336,11 +343,19 @@ class VikitService(object):
         self.action_start_finish()
     
     @fsm.onstate(state_WORKING)
-    def execute(self, client_id, task_id, params):
+    def execute_task(self, client_id, task_id, params):
         """"""
         assert isinstance(self._mod, mod.ModStandard)
         assert self._client_pool.has_client(client_id)
+        
+        #
+        # record client
+        #
         self._dict_task_id_map_client_id[task_id] = client_id
+        
+        #
+        # execute by mod
+        #
         self._mod.execute(params, task_id)
     
     #----------------------------------------------------------------------
@@ -383,8 +398,64 @@ class VikitService(object):
         #
         if self._loopingcall_collecting_result.running:
             self._loopingcall_collecting_result
+    
+    @fsm.onstate(state_WORKING)    
+    def regist_client(self, client_id, conn):
+        """"""
+        self._client_pool.regist_client(client_id, conn)
+    
+    #----------------------------------------------------------------------
+    def unregist_client(self, client_id):
+        """"""
+        #
+        # remove from client pool
+        #
+        self._client_pool.unregist_client(client_id)
+        
+        #
+        # remove tasks in client
+        #
+        def filter_idle_task(task):
+            return task[1] == client_id
+        _buffer = filter(filter_idle_task, self._dict_task_id_map_client_id.items())
+        _buffer = map(lambda x: x[0], _buffer)
+        
+        for i in _buffer:
+            del self._dict_task_id_map_client_id[i]
+
+
+########################################################################
+class VikitServiceFactory(object):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, service_config=None):
+        """Constructor"""
+        #assert isinstance(service_config, VikitServiceConfig)
+        #
+        # set config
+        #
+        self.config = service_config if service_config else VikitServiceConfig()
+        assert isinstance(self.config, VikitServiceConfig)
+    
+    #----------------------------------------------------------------------
+    def build_service(self, bind_port, bind_if=''):
+        """"""
+        _id = getuuid()
+        return VikitService(_id, bind_port, bind_if, self.config)
+    
+    #----------------------------------------------------------------------
+    def build_service_with_config(self, bind_port, bind_if='', config=None, id=None):
+        """"""
+        if config == None:
+            config = self.config
+        
+        _id = id if id else getuuid()
+        return VikitService(_id, bind_port, bind_if, config)
         
         
+    
+    
     
         
         

@@ -13,7 +13,7 @@ from .platform_exc import PlatformError
 
 from ..utils.singleton import Singleton
 from ..utils import getuuid
-from ..common import welcome, heartbeat
+from ..common import welcome, heartbeat, serviceadminop
 
 #
 # define state and FSM
@@ -58,14 +58,18 @@ class _ServiceAdmin(object):
         return self._conn.host
     
     #----------------------------------------------------------------------
-    def start_service(self, id, port, net_if=''):
+    def start_service(self, module_name, id, port, net_if=''):
         """"""
-        raise NotImplemented()
+        #raise NotImplemented()
+        self._conn.send(serviceadminop.StartService(module_name, 
+                                                    id, port, 
+                                                    net_if))
     
     #----------------------------------------------------------------------
     def stop_service(self, id):
         """"""
-        raise NotImplemented()
+        #raise NotImplemented()
+        self._conn.send(serviceadminop.StopService(id))
     
     @property
     def available_services(self):
@@ -121,8 +125,8 @@ class _ServiceAdmin(object):
     #----------------------------------------------------------------------
     def _update_service(self, service_status):
         """"""
-        self._update_available_services(service_status.available)
-        self._update_running_services(service_status.running)
+        self._update_available_services(service_status['available'])
+        self._update_running_services(service_status['running'])
     
     #----------------------------------------------------------------------
     def _update_available_services(self, service_list):
@@ -147,11 +151,13 @@ class _Service:
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, id, admin, port):
+    def __init__(self, modname, id, admin, port, net_if=''):
         """Constructor"""
         assert isinstance(admin, _ServiceAdmin)
+        self._modname = modname
         self._admin = admin
         self._port = port
+        self._if = net_if
         self._id = getuuid()
     
     @property
@@ -167,7 +173,7 @@ class _Service:
     #----------------------------------------------------------------------
     def start(self):
         """"""
-        self._admin.start_service(self.id, self.port)
+        self._admin.start_service(self._modname, self.id, self.port, net_if)
     
     @property
     def port(self):
