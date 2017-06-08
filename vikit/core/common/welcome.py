@@ -54,7 +54,17 @@ class ServiceAdminWelcome(WelcomeBase):
 ########################################################################
 class ServiceAdminWelcomeAck(WelcomeBaseACK):
     """"""
+    
+########################################################################
+class UserWelcome(WelcomeBase):
+    """"""
 
+########################################################################
+class UserWelcome(WelcomeBaseACK):
+    """"""
+
+    
+    
         
     
     

@@ -12,7 +12,7 @@ from scouter.sop import FSM
 from twisted.internet.task import LoopingCall
 
 from ..basic import mod, result
-from ..common import baseprotocol
+from ..common import baseprotocol, serviceop
 from ..utils import getuuid
 
 #
@@ -422,6 +422,21 @@ class VikitService(object):
         
         for i in _buffer:
             del self._dict_task_id_map_client_id[i]
+    
+    #
+    # handler
+    #
+    #----------------------------------------------------------------------
+    def handle_welcome(self, id, conn):
+        """"""
+        self.service.regist_client(obj.id, self)
+    
+    #----------------------------------------------------------------------
+    def handle_task(self, obj):
+        """"""
+        if isinstance(obj, serviceop.VikitTaskInProto):
+            self.execute_task(client_id=obj.client_id, task_id=obj.id, params=obj.params)
+        
 
 
 ########################################################################

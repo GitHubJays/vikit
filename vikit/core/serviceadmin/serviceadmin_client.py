@@ -6,6 +6,8 @@
   Created: 06/05/17
 """
 
+from twisted.internet.protocol import ClientFactory
+
 from scouter.sop import FSM
 
 from ..common import baseprotocol
@@ -73,6 +75,26 @@ class PlatformClient(baseprotocol.VikitProtocol):
         """"""
         return self.fsm.state
         
+        
+        
+    
+########################################################################
+class PlatformClientFactory(ClientFactory):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, service_admin, cryptor=None, *v, **kw):
+        """Constructor"""
+        self.service_admin = service_admin
+        self.cryptor = cryptor
+        self.v = v
+        self.kw = kw
+        
+    #----------------------------------------------------------------------
+    def buildProtocol(self, addr):
+        """"""
+        return PlatformClient(self.service_admin, self.cryptor,
+                              *self.v, **self.kw)
         
         
     

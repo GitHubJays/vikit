@@ -9,11 +9,13 @@
 import psutil
 
 from scouter.sop import FSM
-from twisted.internet import task
+from twisted.internet import task, reactor
 
 from ..common import heartbeat
 from ..common import welcome
+from ..common import serviceadminop
 from .vikitservice_entity import VikitServiceConfig, VikitServiceFactory, VikitService
+from .serviceadmin_client import PlatformClientFactory, PlatformClient
 
 ########################################################################
 class _ServiceDesc(object):
@@ -174,6 +176,7 @@ class VikitServiceAdmin(object):
         self.platform_host = platform_host
         self.platform_port = platform_port
         self.config = service_config if service_config else VikitServiceConfig()
+        assert isinstance(self.config, VikitServiceConfig)
         self.platform = None
         
         #
@@ -212,7 +215,7 @@ class VikitServiceAdmin(object):
     @fsm.transfer(state_INITING, state_CONNECTING_PLATFORM)
     def action_connect_platform(self):
         """"""
-        pass
+        #reactor.connectTCP(self.platform_host, )
     
     @fsm.transfer(state_CONNECTING_PLATFORM, state_WORKING)
     def action_start_finish(self):
@@ -251,9 +254,19 @@ class VikitServiceAdmin(object):
         #
         # connect
         #
+        self.action_connect_platform()
         
+        _conn = reactor.connectTCP(self.platform_host, 
+                                   self.platform_port,
+                                   PlatformClientFactory(self, self.config.cryptor))
+        self.bind_platform(_conn)
         self.action_start_finish()
-        raise NotImplemented()
+        #raise NotImplemented()
+    
+    #----------------------------------------------------------------------
+    def disconnect_platform(self):
+        """"""
+        self.platform.send(obj)
     
     @fsm.onstate(state_WORKING)
     def start_service(self, module_name, bind_port, bind_if='', config=None, id=None):
@@ -381,7 +394,7 @@ class VikitServiceAdmin(object):
     @fsm.onstate(state_CONNECTING_PLATFORM)
     def bind_platform(self, _pltfrm):
         """"""
-        assert isinstance(_pltfrm, _Platform)
+        assert isinstance(_pltfrm, PlatformClient)
         self.platform = _pltfrm
             
     #
@@ -399,4 +412,9 @@ class VikitServiceAdmin(object):
     #----------------------------------------------------------------------
     def handle_working(self, obj):
         """"""
+        if isinstance(obj, serviceadminop.StartService):
+            self.start_service(**obj.value)
+        
+        if isinstance(obj, serviceadminop.StopService):
+            self.shutdown_service(obj.id)
         
