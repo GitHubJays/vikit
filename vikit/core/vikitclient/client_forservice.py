@@ -6,6 +6,8 @@
   Created: 06/07/17
 """
 
+from twisted.internet.protocol import ClientFactory
+
 from ..basic import serializer
 from ..common import baseprotocol
 from ..common import welcome
@@ -67,3 +69,21 @@ class ServiceClientForUser(baseprotocol.VikitProtocol):
 
 
 
+########################################################################
+class ServiceClientForUserFactory(ClientFactory):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, client_ins, cryptor):
+        """Constructor"""
+        self._client_instance = client_ins
+        self._cryptor = cryptor
+    
+    #----------------------------------------------------------------------
+    def buildProtocol(self):
+        """"""
+        return ServiceClientForUser(self._client_instance, self._cryptor)
+        
+        
+    
+    

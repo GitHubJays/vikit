@@ -29,241 +29,255 @@ state_ERROR = 'error'
 # action: error_to_die ERROR->END
 state_END = 'end'
 
-########################################################################
-class _Service(object):
-    """"""
+#########################################################################
+#class _Service(object):
+    #""""""
 
-    #----------------------------------------------------------------------
-    def __init__(self, id, module_name, host, port):
-        """Constructor"""
-        self._id = id
-        self.module_name = module_name
+    ##----------------------------------------------------------------------
+    #def __init__(self, id, module_name, host, port):
+        #"""Constructor"""
+        #self._id = id
+        #self.module_name = module_name
         
-        #
-        # addr
-        #
-        self.host = host
-        self.port = port
+        ##
+        ## addr
+        ##
+        #self.host = host
+        #self.port = port
         
-    @property
-    def id(self):
-        """"""
-        return self._id
-    
-    
+    #@property
+    #def id(self):
+        #""""""
+        #return self._id
     
 
-########################################################################
-class _ServiceInfo(object):
-    """"""
+#########################################################################
+#class _ServiceInfo(object):
+    #""""""
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
-        self._value_dict = {} 
+    ##----------------------------------------------------------------------
+    #def __init__(self):
+        #"""Constructor"""
+        #self._value_dict = {} 
     
-    #----------------------------------------------------------------------
-    def add_service(self, _service_info):
-        """"""
-        assert isinstance(_service_info, _Service)
-        #self._value_dict[_service_info] = _Service
-        if not self._value_dict.has_key(_service_info.module_name):
-            self._value_dict[_service_info.module_name] = []
+    ##----------------------------------------------------------------------
+    #def update_service(self, _service_info):
+        #""""""
+        #assert isinstance(_service_info, _Service)
+        ##self._value_dict[_service_info] = _Service
+        #assert self._value_dict.has_key(_service_info.module_name)
+        #assert isinstance(self._value_dict[_service_info.module_name], dict)
             
-        self._value_dict[_service_info.module_name].append(_service_info)
+        #self._value_dict[_service_info.module_name][_service_info.id] = _service_info
+    
+    ##----------------------------------------------------------------------
+    #def regist_module(self, module_name):
+        #""""""
+        #if not self._value_dict.has_key(module_name):
+            #self._value_dict[module_name] = {}
+    
+    ##----------------------------------------------------------------------
+    #def get_services_by_module_name(self, module_name):
+        #""""""
+        #return self._value_dict.get(module_name)
+    
+    ##----------------------------------------------------------------------
+    #def update(self, obj):
+        #""""""
+        #assert isinstance(obj, userclientop.ServiceInfo)
+        
+        #_infodict = obj.service_information
+    
+
+##
+## _Task
+##
+#########################################################################
+#class _Task(object):
+    #""""""
+
+    ##----------------------------------------------------------------------
+    #def __init__(self, id, module_name, params):
+        #"""Constructor"""
+        #self._id = id
+        #self._module_name = module_name
+        #assert isinstance(params, dict)
+        #self._params = params
+        
+        ##
+        ## priv fields
+        ##
+        #self._result = None
+    
+    #@property
+    #def id(self):
+        #""""""
+        #return self._id
+    
+    #@property
+    #def params(self):
+        #""""""
+        #return self._params
+    
+    #@property
+    #def module_name(self):
+        #""""""
+        #return self._module_name
+    
+    ##----------------------------------------------------------------------
+    #def execute(self, service_ins):
+        #""""""
+        #assert isinstance(service_ins, _ServiceConn)
+        #_ServiceConn.execute(self.id, self.params)
+    
+    ##----------------------------------------------------------------------
+    #def finish(self, result_dict):
+        #""""""
+        #self._result = result.Result(result_dict)
+        
+    #@property
+    #def result(self):
+        #""""""
+        #return self._result
+        
         
     
     
 
-#
-# _Task
-#
-########################################################################
-class _Task(object):
-    """"""
+##
+## _Service
+##
+#########################################################################
+#class _ServiceConn(object):
+    #""""""
 
-    #----------------------------------------------------------------------
-    def __init__(self, id, module_name, params):
-        """Constructor"""
-        self._id = id
-        self._module_name = module_name
-        assert isinstance(params, dict)
-        self._params = params
+    ##----------------------------------------------------------------------
+    #def __init__(self, id, module_name, conn, ack_timeout=10, retry_times=5):
+        #"""Constructor"""
+        #self._id = id
+        #assert isinstance(conn, client_forservice.ServiceClientForUser)
+        #self._conn = conn
+        #self._module_name = module_name
+    
+        #self._ack_timeout = ack_timeout
+        #self._retry_times = retry_times
         
-        #
-        # priv fields
-        #
-        self._result = None
+        ##
+        ## priv attrs
+        ##
+        #self._tasks = {}
     
-    @property
-    def id(self):
-        """"""
-        return self._id
+    #@property
+    #def id(self):
+        #""""""
+        #return self._id
     
-    @property
-    def params(self):
-        """"""
-        return self._params
+    #@property
+    #def conn(self):
+        #""""""
+        #return self._conn
     
-    @property
-    def module_name(self):
-        """"""
-        return self._module_name
-    
-    #----------------------------------------------------------------------
-    def execute(self, service_ins):
-        """"""
-        assert isinstance(service_ins, _ServiceConn)
-        _ServiceConn.execute(self.id, self.params)
-    
-    #----------------------------------------------------------------------
-    def finish(self, result_dict):
-        """"""
-        self._result = result.Result(result_dict)
+    ##----------------------------------------------------------------------
+    #def execute(self, task_id, params):
+        #""""""
+        #_t = userclientop.VikitTaskInProto(task_id, params, self.id)
         
-    @property
-    def result(self):
-        """"""
-        return self._result
+        ##
+        ## regist task
+        ##
+        #self.regist_task(task_id, params)
         
+        ##
+        ## execute
+        ##
+        #self._conn.send(obj, ack_timeout=self._ack_timeout,
+                        #retry_times=self._retry_times)
         
-    
-    
+    ##----------------------------------------------------------------------
+    #def regist_task(self, task_id, params):
+        #""""""
+        ##
+        ## new key
+        ##
+        #_t = _Task(task_id, self._module_name, params)
+        #self._tasks[task_id] = _t
 
-#
-# _Service
-#
-########################################################################
-class _ServiceConn(object):
-    """"""
+    ##----------------------------------------------------------------------
+    #def get_task_by_id(self, task_id):
+        #""""""
+        #return self._tasks.get(task_id)
+        
+    
+    ##----------------------------------------------------------------------
+    #def finish(self, task_id, result_dict):
+        #""""""
+        ##
+        ## got _Task
+        ##
+        #_t = self.get_task_by_id(task_id)
+        #assert isinstance(_t, _Task)
+        
+        ##
+        ## update _Task instance
+        ##
+        #_t.finish(result_dict)
+    
+        ##
+        ## notify
+        ##
+        ### TODO
+        ### TODO
+        ### TODO
 
-    #----------------------------------------------------------------------
-    def __init__(self, id, module_name, conn, ack_timeout=10, retry_times=5):
-        """Constructor"""
-        self._id = id
-        assert isinstance(conn, client_forservice.ServiceClientForUser)
-        self._conn = conn
-        self._module_name = module_name
-    
-        self._ack_timeout = ack_timeout
-        self._retry_times = retry_times
-        
-        #
-        # priv attrs
-        #
-        self._tasks = {}
-    
-    @property
-    def id(self):
-        """"""
-        return self._id
-    
-    @property
-    def conn(self):
-        """"""
-        return self._conn
-    
-    #----------------------------------------------------------------------
-    def execute(self, task_id, params):
-        """"""
-        _t = userclientop.VikitTaskInProto(task_id, params, self.id)
-        
-        #
-        # regist task
-        #
-        self.regist_task(task_id, params)
-        
-        #
-        # execute
-        #
-        self._conn.send(obj, ack_timeout=self._ack_timeout,
-                        retry_times=self._retry_times)
-        
-    #----------------------------------------------------------------------
-    def regist_task(self, task_id, params):
-        """"""
-        #
-        # new key
-        #
-        _t = _Task(task_id, self._module_name, params)
-        self._tasks[task_id] = _t
+##
+## _ModAgent: wrapper for the same mod services
+##
+#########################################################################
+#class _ModAgent(object):
+    #""""""
 
-    #----------------------------------------------------------------------
-    def get_task_by_id(self, task_id):
-        """"""
-        return self._tasks.get(task_id)
+    ##----------------------------------------------------------------------
+    #def __init__(self, module_name, ack_timeout=10, retry_times=5):
+        #"""Constructor"""
+        #self._services = {}
         
+        ##
+        ## basic attrs
+        ##
+        #self._ack_timeout = ack_timeout
+        #self._retry_times = retry_times
     
-    #----------------------------------------------------------------------
-    def finish(self, task_id, result_dict):
-        """"""
-        #
-        # got _Task
-        #
-        _t = self.get_task_by_id(task_id)
-        assert isinstance(_t, _Task)
+    ##----------------------------------------------------------------------
+    #def add_service(self, id, conn):
+        #""""""
+        #_sins = _ServiceConn(id, self._module_name, conn, ack_timeout=self._ack_timeout, 
+                            #retry_times=self._retry_times)
+        ##self._services.append(_sins)
+        #self._services[id] = _sins
         
-        #
-        # update _Task instance
-        #
-        _t.finish(result_dict)
+    ##----------------------------------------------------------------------
+    #def select(self, by=None):
+        #""""""
+        #return random.choice(self._services.values())
+        
+    ##----------------------------------------------------------------------
+    #def execute(self, task_id, params):
+        #""""""
+        #_s = self.select()
+        #_s.execute(task_id, params)
+        
+    ##----------------------------------------------------------------------
+    #def finish(self, client_id, task_id, result_dict):
+        #""""""
+        #_s = self.get_service_conn(client_id)
+        #assert isinstance(_s, _ServiceConn)
+        
+        #_s.finish(task_id, result_dict)
     
-        #
-        # notify
-        #
-        ## TODO
-        ## TODO
-        ## TODO
-
-#
-# _ModAgent: wrapper for the same mod services
-#
-########################################################################
-class _ModAgent(object):
-    """"""
-
-    #----------------------------------------------------------------------
-    def __init__(self, module_name, ack_timeout=10, retry_times=5):
-        """Constructor"""
-        self._services = {}
-        
-        #
-        # basic attrs
-        #
-        self._ack_timeout = ack_timeout
-        self._retry_times = retry_times
-    
-    #----------------------------------------------------------------------
-    def add_service(self, id, conn):
-        """"""
-        _sins = _ServiceConn(id, self._module_name, conn, ack_timeout=self._ack_timeout, 
-                            retry_times=self._retry_times)
-        #self._services.append(_sins)
-        self._services[id] = _sins
-        
-    #----------------------------------------------------------------------
-    def select(self, by=None):
-        """"""
-        return random.choice(self._services.values())
-        
-    #----------------------------------------------------------------------
-    def execute(self, task_id, params):
-        """"""
-        _s = self.select()
-        _s.execute(task_id, params)
-        
-    #----------------------------------------------------------------------
-    def finish(self, client_id, task_id, result_dict):
-        """"""
-        _s = self.get_service_conn(client_id)
-        assert isinstance(_s, _ServiceConn)
-        
-        _s.finish(task_id, result_dict)
-    
-    #----------------------------------------------------------------------
-    def get_service_conn(self, task_id):
-        """"""
-        return self._services.get(task_id)
+    ##----------------------------------------------------------------------
+    #def get_service_conn(self, task_id):
+        #""""""
+        #return self._services.get(task_id)
         
     
     
@@ -323,6 +337,7 @@ class VikitClient(object):
         #
         # service info
         #
+        self._service_info = _ServiceInfo()
         
         
         self.action_start()
@@ -378,23 +393,24 @@ class VikitClient(object):
         raise NotImplemented()
     
     #----------------------------------------------------------------------
-    def _load_mod_agent(self):
+    def _update_service_info(self):
         """"""
         assert isinstance(self.platform_conn, client_forplatform.PlatformClientForUser)
         
-        self.update_service_info()
+        self._query_service_info()
         
         
     #----------------------------------------------------------------------
-    def query_service_info(self):
+    def _query_service_info(self):
         """"""
         _query = userclientop.RequireInfo(self.id)
         self.platform_conn.send(_query, self.config.ack_timeout, self.config.retry_times)
         
     
     #----------------------------------------------------------------------
-    def add_service(self, id, conn):
+    def update_service_info(self, obj):
         """"""
+        self._service_info.update(obj)
     
     #
     # serve
@@ -413,11 +429,7 @@ class VikitClient(object):
         #
         # load _ModAgent
         # 
-        self._load_mod_agent()
-        
-        #
-        # waiting for 
-        #
+        self._update_service_info()
     
     #
     # handle packet callback
@@ -430,7 +442,7 @@ class VikitClient(object):
     #----------------------------------------------------------------------
     def handle_service_info(self, obj):
         """"""
-        raise NotImplemented()
+        self.update_service_info(obj)
     
     #----------------------------------------------------------------------
     def handle_userclient_result(self, obj):
