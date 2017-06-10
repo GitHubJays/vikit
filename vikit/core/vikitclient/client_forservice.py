@@ -13,6 +13,7 @@ from ..common import baseprotocol
 from ..common import welcome
 from .client_entity import VikitClient
 from ..common import userclientop
+from ..utils import getuuid
 
 ########################################################################
 class ServiceClientForUser(baseprotocol.VikitProtocol):
@@ -82,7 +83,7 @@ class ServiceClientForUserFactory(ClientFactory):
     #----------------------------------------------------------------------
     def buildProtocol(self):
         """"""
-        return ServiceClientForUser(self._client_instance, self._cryptor)
+        return ServiceClientForUser(getuuid(), self._client_instance, self._cryptor)
         
         
     
