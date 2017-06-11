@@ -7,6 +7,7 @@
 """
 
 import types
+import os
 
 from scouter.sop import FSM
 from twisted.internet.task import LoopingCall
@@ -189,6 +190,9 @@ _all_states = [state_END,
                state_START,
                state_WORKING]
 
+_CURRENT_PATH_ = os.path.dirname(__file__)
+_CURRENT_MODS_PATH_ = os.path.join(_CURRENT_PATH_, '../../mods/')
+
 ########################################################################
 class VikitServiceConfig(object):
     """"""
@@ -235,7 +239,8 @@ class VikitServiceConfig(object):
 class VikitService(object):
     """"""
     
-    fsm = None
+    fsm = FSM(state_START, state_END,
+              _all_states)
 
     #----------------------------------------------------------------------
     def __init__(self, id, bind_port, bind_if='', config=None):
@@ -253,8 +258,6 @@ class VikitService(object):
         #
         # config FSM
         #
-        self.fsm = FSM(state_START, state_END,
-                       _all_states)
         self.action_start()
         
         #
@@ -310,7 +313,7 @@ class VikitService(object):
         """"""
         self.stop_collecting_result()
     
-    @fsm.trasnfer(state_ERROR, state_END)
+    @fsm.transfer(state_ERROR, state_END)
     def action_error_to_die(self):
         """"""
         self.stop_collecting_result()

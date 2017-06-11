@@ -7,13 +7,15 @@
 """
 
 from scouter.sop import FSM
-
-
+from twisted.internet import reactor
+ 
 from .platform_exc import PlatformError
 
 from ..utils.singleton import Singleton
 from ..utils import getuuid
 from ..common import welcome, heartbeat, serviceadminop
+#from . import platform_server
+from .platform_server import PlatformProtocolFactory
 
 #
 # define state and FSM
@@ -238,11 +240,18 @@ class Platform(Singleton):
     service_pool = _ServicePool(service_admins)
 
     #----------------------------------------------------------------------
-    def __init__(self, id=None, port=7000, net_if=''):
+    def __init__(self, id=None, port=7000, net_if='', cryptor=None):
         """Constructor"""
         self._id = id if id else getuuid()
         self._port = port if port else DEFAULT_PORT
         self._nif = net_if if net_if else ''
+        
+        #
+        # attrs
+        #
+        self.cryptor = cryptor
+        
+        self.factory = PlatformProtocolFactory(self, self.cryptor)
     
     @property 
     def id(self):
@@ -318,6 +327,8 @@ class Platform(Singleton):
     @fsm.onstate(state_START)
     def serve(self):
         """"""
+        reactor.listenTCP(port=self._port,
+                          factory=self.factory)
         self.action_start_serve()
     
     
@@ -327,8 +338,6 @@ class Platform(Singleton):
     @fsm.transfer(state_START, state_WAITING)
     def action_start_serve(self):
         """"""
-        raise NotImplemented()
-        
         self.action_finish_serve()
     
     @fsm.transfer(state_WAITING, state_RUNNING)

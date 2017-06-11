@@ -126,20 +126,20 @@ class _Platform(object):
 #
 # define states
 #
-state_START
+state_START = 'start'
 # action: start START->INITING
-state_INITING
+state_INITING = 'initing'
 # action: connect_platform INITING->CONNECT_PLATFORM
-state_CONNECTING_PLATFORM
+state_CONNECTING_PLATFORM = 'connect'
 # action: start_finish CONNECT_PLATFORM->WORKING
-state_WORKING
+state_WORKING = 'working'
 # action: connect_error CONNECT_PLATFORM->ERROR
 # action: runtime_error WORKING->ERROR
 # action: start_error INITING->ERROR
-state_ERROR
+state_ERROR = 'error'
 # action: error_to_die ERROR->END
 # action: shutdown WORKING->END
-state_END
+state_END = 'end'
 
 _all_states = [state_CONNECTING_PLATFORM,
                state_END,
@@ -153,7 +153,8 @@ _all_states = [state_CONNECTING_PLATFORM,
 class VikitServiceAdmin(object):
     """"""
     
-    fsm = None
+    fsm = FSM(state_START, state_END,
+              _all_states)
     
     #----------------------------------------------------------------------
     def __new__(self, *v, **kw):
@@ -182,15 +183,13 @@ class VikitServiceAdmin(object):
         #
         # set FSM
         #
-        self.fsm = FSM(state_START, state_END,
-                       _all_states)
         self.action_start()
         
         #
         # service map
         #
         self._service_map = {}
-        
+
         #
         # set service factory
         #
@@ -394,7 +393,7 @@ class VikitServiceAdmin(object):
     @fsm.onstate(state_CONNECTING_PLATFORM)
     def bind_platform(self, _pltfrm):
         """"""
-        assert isinstance(_pltfrm, PlatformClient)
+        #assert isinstance(_pltfrm, PlatformClient)
         self.platform = _pltfrm
             
     #
@@ -405,9 +404,9 @@ class VikitServiceAdmin(object):
         """"""
         assert isinstance(obj, welcome.PlatformWelcome)
         
-        _pltfrm = _Platform(obj.id, conn)
-        self.bind_platform(_pltfrm)
-        self.action_start_finish()
+        #_pltfrm = _Platform(obj.id, conn)
+        #self.bind_platform(_pltfrm)
+        #self.action_start_finish()
     
     #----------------------------------------------------------------------
     def handle_working(self, obj):
@@ -417,4 +416,14 @@ class VikitServiceAdmin(object):
         
         if isinstance(obj, serviceadminop.StopService):
             self.shutdown_service(obj.id)
+    
+    #----------------------------------------------------------------------
+    def start(self, async=True):
+        """"""
+        self.connect_paltform()
+        
+        if async:
+            pass
+        else:
+            reactor.run()
         

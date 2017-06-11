@@ -41,6 +41,11 @@ class VikitServiceConn(baseprotocol.VikitProtocol):
             if isinstance(obj, serviceop.VikitTaskInProto):
                 obj.client_id = self.id
                 self.service.handle_task(obj)
+    
+    #----------------------------------------------------------------------
+    def connectionMade(self):
+        """"""
+        self.send(welcome.WelcomeBase(self.id))
         
         
     

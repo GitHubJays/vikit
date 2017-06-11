@@ -64,7 +64,7 @@ class VikitProtocol(Protocol):
         if isinstance(obj, ackpool.Ackable):
             self.ack_pool.add(obj.id, self._send, (obj,), 
                               ack_timeout=ack_timeout, 
-                              retry_items=retry_items)
+                              retry_items=retry_times)
         
         self._send(obj)
     
@@ -72,5 +72,6 @@ class VikitProtocol(Protocol):
     #----------------------------------------------------------------------
     def _send(self, obj):
         """"""
-        self.transport.write()
+        tessxt = self.serializer.serialize(obj)
+        self.transport.write(tessxt)
     

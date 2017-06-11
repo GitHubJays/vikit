@@ -28,7 +28,9 @@ class Serializer(object):
     #----------------------------------------------------------------------
     def set_cryptor(self, obj=None):
         """"""
-        assert isinstance(obj, crypto.CryptoBase)
+        if obj:
+            assert isinstance(obj, crypto.CryptoBase)
+        
         self._cryptor = obj
     
     #----------------------------------------------------------------------

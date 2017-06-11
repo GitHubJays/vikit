@@ -8,7 +8,9 @@
 
 from scouter.sop import FSM
 
-from . import platform_entity
+from twisted.internet.protocol import Factory
+
+#from . import platform_entity
 from ..common import baseprotocol
 from ..basic import serializer
 from ..common import welcome
@@ -33,7 +35,8 @@ _all_states = [state_END,
 class PlatformProtocol(baseprotocol.VikitProtocol):
     """"""
     
-    fsm = None
+    fsm = FSM(state_START, state_END,
+              _all_states)
 
     #----------------------------------------------------------------------
     def __init__(self, platform_ins=None, cryptor=None,
@@ -50,7 +53,7 @@ class PlatformProtocol(baseprotocol.VikitProtocol):
         # bind paltform instance
         #
         self._platform = platform_ins
-        assert isinstance(self._platform, platform_entity.Platform)
+        #assert isinstance(self._platform, platform_entity.Platform)
         
         #
         # set FSM
@@ -60,7 +63,7 @@ class PlatformProtocol(baseprotocol.VikitProtocol):
         #
         # initial flag
         #
-        self.action_start()
+        self._working = False
     
     #
     # neccessary to set cryptor, even if cryptor is None
@@ -71,45 +74,18 @@ class PlatformProtocol(baseprotocol.VikitProtocol):
         assert isinstance(self.serializer, serializer.Serializer)
         self.serializer.set_cryptor(self._cryptor)
         
-    #
-    # define action for fsm
-    #
-    @fsm.transfer(state_START, state_INITING)
-    def action_start(self):
-        """"""
-        pass
-    
-    @fsm.transfer(state_INITING, state_WORKING)
-    def action_start_finish(self):
-        """"""
-        pass
-    
-    @fsm.transfer(state_WORKING, state_ERROR)
-    def action_runting_error(self):
-        """"""
-        pass
-    
-    @fsm.transfer(state_INITING, state_ERROR)
-    def action_starting_error(self):
-        """"""
-        pass
-    
-    @fsm.transfer(state_ERROR, state_END)
-    def action_shutdown(self):
-        """"""
-        pass
-        
+
     #   
     # core code
     #
     #----------------------------------------------------------------------
     def handle_obj(self, obj):
         """"""
-        if isinstance(obj, welcome.ServiceAdminWelcome):
-            self._platform.handle_welcome(obj, self)
-            self.action_start_finish()
-    
-        if self.fsm.state == state_WORKING:
+        if not self._working:
+            if isinstance(obj, welcome.ServiceAdminWelcome):
+                self._platform.handle_welcome(obj, self)
+                #self.action_start_finish()
+        else:
             self.handle_working(obj)
     
     #----------------------------------------------------------------------
@@ -123,3 +99,21 @@ class PlatformProtocol(baseprotocol.VikitProtocol):
         """"""
         self.send(welcome.PlatformWelcome(self._platform.id))
 
+########################################################################
+class PlatformProtocolFactory(Factory):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, platform_ins, cryptor=None):
+        """Constructor"""
+        self.cryptor = cryptor
+        #assert isinstance(platform_ins, Platform)
+        self.platform_ins = platform_ins
+    
+    #----------------------------------------------------------------------
+    def buildProtocol(self, addr):
+        """"""
+        return PlatformProtocol(self.platform_ins, self.cryptor)
+        
+    
+    

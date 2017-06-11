@@ -12,15 +12,15 @@ from scouter.sop import FSM
 
 from ..common import baseprotocol
 from ..basic import serializer
-from .serviceadmin_entity import VikitServiceAdmin
+#from .serviceadmin_entity import VikitServiceAdmin
 
 
 #
 # define states
 #
-state_START
-state_WORKING
-state_END
+state_START = 'start'
+state_WORKING = 'working'
+state_END = 'end'
 
 ########################################################################
 class PlatformClient(baseprotocol.VikitProtocol):
@@ -40,7 +40,7 @@ class PlatformClient(baseprotocol.VikitProtocol):
         #
         # service_admin
         #
-        assert isinstance(service_admin, VikitServiceAdmin)
+        #assert isinstance(service_admin, VikitServiceAdmin)
         self.service_admin = service_admin
         
         
@@ -54,7 +54,7 @@ class PlatformClient(baseprotocol.VikitProtocol):
     def handle_obj(self, obj):
         """"""
         if self.state == state_START:   
-            self.service_admin.handle_welcome(obj, conn)
+            self.service_admin.handle_welcome(obj, self)
             self.action_startup()
         else:
             self.service_admin.handle_working(obj)
