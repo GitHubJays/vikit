@@ -210,10 +210,10 @@ class VikitServiceDriverFactory(object):
         self.result_callback = result_callback
         
     #----------------------------------------------------------------------
-    def build_service_driver(self, target_host, target_port):
+    def build_service_driver(self, id, target_host, target_port):
         """"""
-        _id = getuuid()
-        return VikitServiceDriver(id=_id,
+        #_id = getuuid()
+        return VikitServiceDriver(id=id,
                                   host=target_host,
                                   port=target_port,
                                   cryptor=self.cryptor,

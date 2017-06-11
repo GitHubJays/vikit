@@ -6,11 +6,15 @@
   Created: 06/07/17
 """
 
+from twisted.internet.protocol import ClientFactory
+
 from ..basic import serializer
+from ..utils import getuuid
 from ..common import baseprotocol
 from ..common import welcome
-from .client_entity import VikitClient
+#from .client_entity import VikitClient
 from ..common import userclientop
+from . import vikit_agent
 
 ########################################################################
 class PlatformClientForUser(baseprotocol.VikitProtocol):
@@ -30,7 +34,7 @@ class PlatformClientForUser(baseprotocol.VikitProtocol):
         #
         # bind client
         #
-        assert isinstance(client_ins, VikitClient)
+        assert isinstance(client_ins, vikit_agent.ModAgentPool)
         self.client = client_ins
         
         #
@@ -62,8 +66,29 @@ class PlatformClientForUser(baseprotocol.VikitProtocol):
             if isinstance(obj, welcome.WelcomeBase):
                 self.client.bind_platform(id, self)
         else:
-            if isinstance(obj, userclientop.ServiceInfo):
+            if isinstance(obj, userclientop.ResponseServiceInfoInProto):
                 self.client.update_serviceinfo(obj)
+                
+
+########################################################################
+class PlatformClientForUserFactory(ClientFactory):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, modagentpool):
+        """Constructor"""
+        self._agent_pool = modagentpool
+        assert isinstance(self._agent_pool, vikit_agent.ModAgentPool)
+        
+    #----------------------------------------------------------------------
+    def buildProtocol(self):
+        """"""
+        return PlatformClientForUser(id=getuuid, client_ins=self._agent_pool, 
+                                     cryptor=self._agent_pool.cryptor)
+        
+        
+    
+    
     
         
     

@@ -11,7 +11,7 @@ from .bases import Ack, Ackable, ActionBase
 from .serviceop import VikitResultInProto, VikitTaskInProto
 
 ########################################################################
-class RequireInfo(Ackable, ActionBase):
+class RequireServiceInfoInProto(Ackable, ActionBase):
     """"""
 
     #----------------------------------------------------------------------
@@ -25,7 +25,7 @@ class RequireInfo(Ackable, ActionBase):
         return self._id
 
 ########################################################################
-class ServiceInfo(Ackable, ActionBase):
+class ResponseServiceInfoInProto(Ackable, ActionBase):
     """"""
 
     #----------------------------------------------------------------------
