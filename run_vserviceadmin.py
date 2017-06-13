@@ -10,6 +10,6 @@ from vikit.core.serviceadmin import serviceadmin_entity
 from twisted.internet import reactor
 
 sa = serviceadmin_entity.VikitServiceAdmin('testsa', '127.0.0.1', 7000)
-sa.connect_paltform()
+sa.start()
 
 reactor.run()
