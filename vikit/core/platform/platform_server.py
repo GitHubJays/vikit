@@ -81,6 +81,7 @@ class PlatformProtocol(baseprotocol.VikitProtocol):
     #----------------------------------------------------------------------
     def handle_obj(self, obj):
         """"""
+        print obj
         if not self._working:
             if isinstance(obj, welcome.ServiceAdminWelcome):
                 self._platform.handle_welcome(obj, self)

@@ -349,7 +349,7 @@ class VikitService(object):
     def execute_task(self, client_id, task_id, params):
         """"""
         assert isinstance(self._mod, mod.ModStandard)
-        assert self._client_pool.has_client(client_id)
+        #assert self._client_pool.has_client(client_id)
         
         #
         # record client

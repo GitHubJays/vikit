@@ -33,10 +33,14 @@ from vikit.core.basic import result
 from vikit.core.basic import utils
 from vikit.core.basic import modmanager
 from vikit.core.basic import service
-from vikit.core.basic import serializer
-from vikit.core.platform import platform_entity
-from vikit.core.common import ackpool
+from vikit.core.launch import serializer
+#from vikit.core.platform import platform_entity
+from vikit.core.launch import ackpool
+from vikit.core.servicenode import vikitservice, vikitservicenode
+from vikit.core.vikitclient import vikitclient
+from vikit.core.launch.twistedlaunch import TwistdLauncher
 
+end = False
 
 class Test(object):
     #----------------------------------------------------------------------
@@ -329,7 +333,58 @@ class VikitTester(unittest.TestCase):
             
         pool.add('sdfasd', test, ack_timeout=3)
         pool.ack('sdfasd')
+    
+    #----------------------------------------------------------------------
+    def test_service_entity(self):
+        """"""
+        vs = vikitservice.VikitService(id='test')
+        vs.load_mod('demo')
+        print('-'*20 + 'Test Vikit Service' + '-'*20)
         
+        def check_result(result):
+            vs.quit()
+        
+        vs.regist_result_callback(check_result)
+        vs.execute_task('fdasdfasd', {"target":'http://tbis.me',
+                                      'payload':'adfa',
+                                      'config':{'param1':True,
+                                                'param2':'asdfasd'}})
+        vs.join()
+        
+        
+        
+    
+        
+    #----------------------------------------------------------------------
+    def test_client_entity(self):
+        """"""
+        vs = vikitservice.VikitService(id='test')
+        vs.load_mod('demo')
+        
+        vc = vikitclient.VikitClient('tests')
+        def test(tid, params):
+            vs.execute_task(tid, params)
+            return tid, params
+        vc.regist_execute_callback(test)
+        def test_result(result):
+            print(result)
+            return result
+        vc.regist_result_callback(test_result)
+        vc.execute_task(task_id='assssss', params={"target":'http://tbis.me',
+                                                   'payload':'adfa',
+                                                   'config':{'param1':True,
+                                                             'param2':'asdfasd'}})
+    
+    #----------------------------------------------------------------------
+    def test_service_node(self):
+        """"""
+        snode = vikitservicenode.VikitServiceNode()
+        
+        snode.start_service(id='sdfsdf', module_name='demo', 
+                            launcher=TwistdLauncher, launcher_kw_config={'port':7011,
+                                                                         'net_if':''})
+        snode.get_service_info(module_name='demo')
+        snode.shutdown_service(id='sdfsdf')
         
 if __name__ == '__main__':
     unittest.main()

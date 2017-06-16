@@ -10,7 +10,7 @@ from twisted.internet.protocol import ClientFactory
 
 from scouter.sop import FSM
 
-from ..common import baseprotocol
+from ..common import baseprotocol, welcome
 from ..basic import serializer
 #from .serviceadmin_entity import VikitServiceAdmin
 
@@ -26,10 +26,10 @@ state_END = 'end'
 class PlatformClient(baseprotocol.VikitProtocol):
     """"""
     
-    fsm = FSM(state_START, state_END,
-              [state_END,
-               state_START,
-               state_WORKING])
+    #fsm = FSM(state_START, state_END,
+              #[state_END,
+               #state_START,
+               #state_WORKING])
 
     #----------------------------------------------------------------------
     def __init__(self, service_admin, cryptor=None, *v, **kw):
@@ -43,6 +43,12 @@ class PlatformClient(baseprotocol.VikitProtocol):
         #assert isinstance(service_admin, VikitServiceAdmin)
         self.service_admin = service_admin
         
+        #
+        # fsm
+        #
+        self.fsm = FSM(state_START, state_END,
+                       [state_END, state_START, state_WORKING])
+        
         
     #----------------------------------------------------------------------
     def init_cryptor(self):
@@ -53,6 +59,7 @@ class PlatformClient(baseprotocol.VikitProtocol):
     #----------------------------------------------------------------------
     def handle_obj(self, obj):
         """"""
+        print obj
         if self.state == state_START:   
             self.service_admin.handle_welcome(obj, self)
             self.action_startup()
@@ -60,20 +67,29 @@ class PlatformClient(baseprotocol.VikitProtocol):
             self.service_admin.handle_working(obj)
         
     
-    @fsm.transfer(state_START, state_WORKING)
+    #@fsm.transfer(state_START, state_WORKING)
     def action_startup(self):
         """"""
-        pass
+        assert self.fsm.state == state_START
+        self.fsm.state = state_WORKING
     
-    @fsm.transfer(state_WORKING, state_END)
+    #@fsm.transfer(state_WORKING, state_END)
     def action_shutdown(self):
         """"""
-        pass
+        assert self.fsm.state == state_WORKING
+        self.fsm.state = state_END
     
+    #----------------------------------------------------------------------
+    def connectionMade(self):
+        """"""
+        self.send(welcome.WelcomeBase(self.service_admin.id))
+        
     @property
     def state(self):
         """"""
         return self.fsm.state
+    
+    
         
         
         

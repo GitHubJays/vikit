@@ -118,6 +118,12 @@ class ModBase(Mod):
         self._core_func = None
         
         self.pool.start()
+        
+        #
+        # userdefine regist result callback
+        #
+        self._userdefine_result_callback = None
+        self._flat_in2queue = True
     
     #----------------------------------------------------------------------
     def __del__(self):
@@ -128,9 +134,24 @@ class ModBase(Mod):
     #----------------------------------------------------------------------
     def _feed_result(self, result):
         """"""
+        if self._userdefine_result_callback:
+            self._userdefine_result_callback(result)
+        
         #print('CALLBACK IS CALLED!')
         self._result_queue.put(result)
         return result
+
+    #----------------------------------------------------------------------
+    def regist_result_callback(self, callback, add_in_queue=True):
+        """"""
+        if add_in_queue:
+            self._flat_in2queue = True
+        else:
+            self._flat_in2queue = False
+        
+        assert callable(callback)
+        self._userdefine_result_callback = callback
+        
     
     #----------------------------------------------------------------------
     def execute(self, modinput_dict, task_id=None):
@@ -391,6 +412,19 @@ class ModStandard(ModBase):
         self._inputchecker = modinput.ModInput(*self.DEMANDS)
     
         self._inputchecker.check_from_dict(params, stricted=True)
+    
+    #----------------------------------------------------------------------
+    def get_mod_info(self):
+        """"""
+        _infos = {}
+        for i in BUILD_IN_VAR:
+            if not hasattr(self, i):
+                pass
+            else:
+                _infos[i] = str(getattr(self, i))
+        
+        return _infos
+        
 
 
 ########################################################################

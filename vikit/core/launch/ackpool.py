@@ -7,27 +7,7 @@
 """
 
 from twisted.internet import task
-
-########################################################################
-class Ackable(object):
-    """"""
-    pass
-
-########################################################################
-class Ack(object):
-    """"""
-    
-    #----------------------------------------------------------------------
-    def __init__(self, id):
-        """"""
-        self._id = id
-        
-    @property
-    def id(self):
-        """"""
-        return self._id
-        
-    
+from ..common.actions.ackbase import Ack, Ackable
 
 ########################################################################
 class ACKError(Exception):
@@ -46,18 +26,18 @@ class _TaskAckable(object):
         self._kwargs = kwargs
         self._interval = interval
         self._retry_times = retry_times
-        
+
         #
         # priv
         #
         self._count = 0
-    
+
     #----------------------------------------------------------------------
     def waiting_ack(self):
         """"""
         self._lpc = task.LoopingCall(self._exec)
         self._lpc.start(self._interval, False)
-    
+
     #----------------------------------------------------------------------
     def _exec(self):
         """"""
@@ -66,7 +46,7 @@ class _TaskAckable(object):
             self.stop()
         else:
             self._fun(*self._vargs, **self._kwargs)
-    
+
     #----------------------------------------------------------------------
     def stop(self):
         """"""
@@ -74,20 +54,20 @@ class _TaskAckable(object):
             self._lpc.stop()
         else:
             pass
-    
+
     #----------------------------------------------------------------------
     def ack(self):
         """"""
         self.stop()
-    
+
     @property
     def finished(self):
         """"""
         return self._lpc.running
-        
-    
-    
-    
+
+
+
+
 
 ########################################################################
 class ACKPool(object):
@@ -97,16 +77,16 @@ class ACKPool(object):
     def __init__(self):
         """Constructor"""
         self._pool = {}
-    
+
     #----------------------------------------------------------------------
     def add(self, id, target_func, vargs=tuple(), kwargs={}, ack_timeout=10, retry_items=5):
         """"""
         ret = _TaskAckable(id, target_func, vargs, kwargs,
                            interval=ack_timeout, retry_times=retry_items)    
         self._pool[id] = ret
-        
+
         ret.waiting_ack()
-    
+
     #----------------------------------------------------------------------
     def ack(self, id):
         """"""
