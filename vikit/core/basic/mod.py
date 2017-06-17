@@ -91,7 +91,7 @@ class ModBase(Mod):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, name, min_threads=5, max_threads=20, debug=True,
+    def __init__(self, name, min_threads=5, max_threads=20, debug=False,
                  loop_interval=0.2, adjust_interval=3, diviation_ms=100):
         """Constructor"""
         Mod.__init__(self)

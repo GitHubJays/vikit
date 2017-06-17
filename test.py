@@ -39,6 +39,8 @@ from vikit.core.launch import ackpool
 from vikit.core.servicenode import vikitservice, vikitservicenode
 from vikit.core.vikitclient import vikitclient
 from vikit.core.launch.twistedlaunch import TwistdLauncher
+from vikit.core.common.vikitdatas import vikitserviceinfo
+from vikit.core.common.vikitdatas import vikitservicedesc
 
 end = False
 
@@ -382,9 +384,26 @@ class VikitTester(unittest.TestCase):
         
         snode.start_service(id='sdfsdf', module_name='demo', 
                             launcher=TwistdLauncher, launcher_kw_config={'port':7011,
+                                                                         'net_if':''})        
+        
+        snode.start_service(id='sdfsdfs', module_name='demo', 
+                            launcher=TwistdLauncher, launcher_kw_config={'port':7013,
                                                                          'net_if':''})
-        snode.get_service_info(module_name='demo')
+        sinfo = snode.get_service_info(module_name='demo')
+        self.assertIsInstance(sinfo, list)
+        self.assertIsInstance(sinfo[0], vikitserviceinfo.VikitServiceInfo)
+        self.assertIsInstance(sinfo[0].get_dict(), dict)
         snode.shutdown_service(id='sdfsdf')
+        snode.shutdown_service(id='sdfsdfs')
+        
+        time.sleep(3)
+    
+    #----------------------------------------------------------------------
+    def test_platform(self):
+        """"""
+        
+    
+        
         
 if __name__ == '__main__':
     unittest.main()

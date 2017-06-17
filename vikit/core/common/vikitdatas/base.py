@@ -17,4 +17,12 @@ class VikitDatas(object):
         """"""
         pass
     
+    #----------------------------------------------------------------------
+    def __getattr__(self, key):
+        """"""
+        if hasattr(self, 'config'):
+            return self.config.get(key)
+        else:
+            return None
+        
     

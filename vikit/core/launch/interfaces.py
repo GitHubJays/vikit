@@ -51,6 +51,10 @@ class ConnecterIf(object):
     def stop(self):
         """"""
         pass
-        
+    
+    @abstractmethod
+    def get_info(self):
+        """"""
+        pass
     
     

@@ -9,6 +9,7 @@
 from . import vikitservice
 from ..basic import vikitbase
 from ..launch.interfaces import LauncherIf
+from ..common.vikitdatas import vikitservicedesc, vikitservicelauncherinfo, vikitserviceinfo
 
 ########################################################################
 class VikitServiceNode(vikitbase.VikitBase):
@@ -55,15 +56,20 @@ class VikitServiceNode(vikitbase.VikitBase):
     def get_service_info(self, module_name):
         """"""
         if module_name:
-            _services = filter(lambda x: x['module_name'] == module_name, 
+            _launcher = filter(lambda x: x['module_name'] == module_name, 
                                self._dict_launcher.values())
-            _services = map(lambda x: x['launcher'], _services)
+            _launcher = map(lambda x: x['launcher'], _launcher)
         else:
-            _services = map(lambda x: x['launcher'], self._dict_launcher.values())
+            _launcher = map(lambda x: x['launcher'], self._dict_launcher.values())
         
-        _service_infos = map(lambda x: x.service.get_info(), _services)
+        def _build_service_info(_lchr):
+            _desc = vikitservicedesc.VikitServiceDesc(**_lchr.entity.get_info())
+            _linfo = vikitservicelauncherinfo.VikitServiceLauncherInfo(**_lchr.get_info())
+            return vikitserviceinfo.VikitServiceInfo(_desc, _linfo)
+            
+        _launcher_infos = map(_build_service_info, _launcher)
         
-        return _service_infos
+        return _launcher_infos
     
     #----------------------------------------------------------------------
     def shutdown_service(self, id):

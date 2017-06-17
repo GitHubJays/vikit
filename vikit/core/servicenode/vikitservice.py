@@ -55,7 +55,7 @@ class VikitServiceConfig(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, min_threads=5, max_threads=20, debug=True,
+    def __init__(self, min_threads=5, max_threads=20, debug=False,
                  loop_interval=0.2, adjust_interval=3, diviation_ms=100,
                  default_mod_paths=[_CURRENT_MODS_PATH_,]):
         """Constructor"""
@@ -208,7 +208,7 @@ class VikitService(vikitbase.VikitBase):
         """"""
         _ret = vikitservicedesc.VikitServiceDesc(id=self.id, 
                                                  mod_info=self.get_mod_info())
-        return _ret
+        return _ret.get_dict()
     
     
     
