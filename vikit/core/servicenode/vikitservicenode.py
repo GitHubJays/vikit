@@ -6,7 +6,7 @@
   Created: 06/16/17
 """
 
-from ..actions import welcome_action
+from ..actions import welcome_action, servicenode_actions
 from . import vikitservice
 from ..basic import vikitbase
 from ..utils.singleton import Singleton
@@ -72,7 +72,7 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         def _build_service_info(_lchr):
             _desc = vikitservicedesc.VikitServiceDesc(**_lchr.entity.get_info())
             _linfo = vikitservicelauncherinfo.VikitServiceLauncherInfo(**_lchr.get_info())
-            return vikitserviceinfo.VikitServiceInfo(_desc, _linfo)
+            return vikitserviceinfo.VikitServiceInfo(self.id, _desc, _linfo)
             
         _launcher_infos = map(_build_service_info, _launcher)
         
@@ -102,6 +102,11 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         if isinstance(obj, welcome_action.VikitWelcomeAction):
             #raise StandardError()
             pass
+        elif isinstance(obj, servicenode_actions.StartServiceAction):
+            self.start_service(id=obj.service_id,
+                               module_name=obj.module_name,
+                               launcher=obj.launcher_type,
+                               launcher_kw_config=obj.launcher_config)
         else:
             raise NotImplementedError()
     

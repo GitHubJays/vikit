@@ -17,6 +17,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     
     _dict_service_node_recorder = {}
     _id = ''
+    _service_infos = []
 
     #----------------------------------------------------------------------
     def __init__(self, id):
@@ -46,6 +47,9 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         """"""
         pass
     
+    #
+    # utils
+    #
     #----------------------------------------------------------------------
     def regist_service_node(self, service_node_id, **record):
         """"""
@@ -60,6 +64,15 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         """"""
         return self._dict_service_node_recorder.has_key(service_node_id)
     
+    #----------------------------------------------------------------------
+    def get_service_node_record(self, service_node_id):
+        """"""
+        return self._dict_service_node_recorder.get(service_node_id, {})
+    
+    #----------------------------------------------------------------------
+    def get_service_info(self):
+        """"""
+        return self._service_infos
         
     
     

@@ -409,27 +409,9 @@ class VikitTester(unittest.TestCase):
     def test_platform(self):
         """"""
         #
-        # launch platform
+        # function test
         #
-        pltfm = vikitplatform.VikitPlatform(id='platformtest')
-        lnchr = TwistdLauncher(pltfm)
-        lnchr.serve(7012, '')
-        
-        #
-        # launch servicenode
-        #
-        sn = vikitservicenode.VikitServiceNode('servicenode1')
-        cnnctr = TwistdConnector(sn)
-        cnnctr.connect('127.0.0.1', 7012)
-        
-        time.sleep(0.5)
-        emitter = TwistedPlatformEventEmitter(lnchr)
-        emitter.start_service(service_node_id='servicenode1', service_id='servicedemotest1', 
-                              module_name='demo', launcher_config={'port':7011,
-                                                                   'net_if':''})
-        
-        time.sleep(5)
-        
+        pass
         
     
         

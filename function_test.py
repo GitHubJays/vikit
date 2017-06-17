@@ -29,17 +29,43 @@ node = vikitservicenode.VikitServiceNode('2')
 connector = TwistdConnector(node)
 connector.connect('127.0.0.1', 7077)
 
-time.sleep(5)
-
-platform
-print(platform)
-print(platform._dict_service_node_recorder)
 
 #
 # start
 #
-#pemitter = twistedemitter.TwistedPlatformEventEmitter(launcher)
-#pemitter.start_service('1', '33', 'demo', {'port':7034,
-                                           #'net_if':''})
+pemitter = twistedemitter.TwistedPlatformEventEmitter(launcher)
+
+#
+# test start service
+#
+#----------------------------------------------------------------------
+def test_start_service():
+    """"""
+    global pemitter
+    pemitter.start_service('2', '33', 'demo', {'port':7034,
+                                               'net_if':''})    
+    
+reactor.callLater(2, test_start_service)
+
+#
+# test check service
+#
+#----------------------------------------------------------------------
+def test_service():
+    """"""
+    pemitter.get_service_info()
+
+reactor.callLater(2.5, test_service)
+
+
+#
+# shutdown function test
+#
+#----------------------------------------------------------------------
+def stop():
+    """"""
+    reactor.stop()
+
+reactor.callLater(5, stop)
 
 reactor.run()
