@@ -39,8 +39,15 @@ from vikit.core.launch import ackpool
 from vikit.core.servicenode import vikitservice, vikitservicenode
 from vikit.core.vikitclient import vikitclient
 from vikit.core.launch.twistedlaunch import TwistdLauncher
-from vikit.core.common.vikitdatas import vikitserviceinfo
-from vikit.core.common.vikitdatas import vikitservicedesc
+from vikit.core.vikitdatas import vikitserviceinfo
+from vikit.core.vikitdatas import vikitservicedesc
+
+#
+# test platform
+#
+from vikit.core.platform import vikitplatform
+from vikit.core.launch.twistedlaunch import TwistdLauncher, TwistdConnector
+from vikit.core.eventemitter.twistedemitter import TwistedPlatformEventEmitter
 
 end = False
 
@@ -380,7 +387,7 @@ class VikitTester(unittest.TestCase):
     #----------------------------------------------------------------------
     def test_service_node(self):
         """"""
-        snode = vikitservicenode.VikitServiceNode()
+        snode = vikitservicenode.VikitServiceNode('testnode')
         
         snode.start_service(id='sdfsdf', module_name='demo', 
                             launcher=TwistdLauncher, launcher_kw_config={'port':7011,
@@ -401,6 +408,28 @@ class VikitTester(unittest.TestCase):
     #----------------------------------------------------------------------
     def test_platform(self):
         """"""
+        #
+        # launch platform
+        #
+        pltfm = vikitplatform.VikitPlatform(id='platformtest')
+        lnchr = TwistdLauncher(pltfm)
+        lnchr.serve(7012, '')
+        
+        #
+        # launch servicenode
+        #
+        sn = vikitservicenode.VikitServiceNode('servicenode1')
+        cnnctr = TwistdConnector(sn)
+        cnnctr.connect('127.0.0.1', 7012)
+        
+        time.sleep(0.5)
+        emitter = TwistedPlatformEventEmitter(lnchr)
+        emitter.start_service(service_node_id='servicenode1', service_id='servicedemotest1', 
+                              module_name='demo', launcher_config={'port':7011,
+                                                                   'net_if':''})
+        
+        time.sleep(5)
+        
         
     
         

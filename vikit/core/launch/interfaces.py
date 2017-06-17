@@ -6,10 +6,18 @@
   Created: 06/17/17
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 ########################################################################
-class LauncherIf(object):
+class LaunchableIf(object):
+    """"""
+
+    pass
+    
+    
+
+########################################################################
+class LauncherIf(LaunchableIf):
     """"""
     
     __metaclass__ = ABCMeta
@@ -30,9 +38,19 @@ class LauncherIf(object):
         """"""
         pass
     
+    @abstractmethod
+    def get_info(self):
+        """"""
+        pass  
+    
+    @abstractproperty
+    def working(self):
+        """"""
+        pass
+    
 
 ########################################################################
-class ConnecterIf(object):
+class ConnecterIf(LaunchableIf):
     """"""
     
     __metaclass__ = ABCMeta
@@ -52,9 +70,11 @@ class ConnecterIf(object):
         """"""
         pass
     
-    @abstractmethod
-    def get_info(self):
+    @abstractproperty
+    def working(self):
         """"""
         pass
+    
+
     
     

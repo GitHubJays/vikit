@@ -8,7 +8,7 @@
 
 from twisted.internet import reactor
 from ..interfaces import LauncherIf
-from .twistedbase import VikitTwistedProtocolFactory
+from ..twistedbase import VikitTwistedProtocolFactory
 
 ########################################################################
 class TwistdLauncher(LauncherIf):
@@ -52,6 +52,11 @@ class TwistdLauncher(LauncherIf):
     def get_info(self):
         """"""
         return self.config
+    
+    @property
+    def working(self):
+        """"""
+        return True if self.connector else False
         
         
         

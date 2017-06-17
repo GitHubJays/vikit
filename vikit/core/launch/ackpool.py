@@ -7,7 +7,7 @@
 """
 
 from twisted.internet import task
-from ..common.actions.ackbase import Ack, Ackable
+from ..actions.ackbase import Ack, Ackable
 
 ########################################################################
 class ACKError(Exception):

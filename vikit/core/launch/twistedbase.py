@@ -6,9 +6,10 @@
   Created: 06/02/17
 """
 
-from twisted.internet.protocol import Protocol, Factory
+from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
-from .. import ackpool, serializer, crypto
+from . import ackpool, serializer, crypto
+from ..actions import welcome_action
 
 ########################################################################
 class VikitTwistedProtocol(Protocol):
@@ -18,7 +19,7 @@ class VikitTwistedProtocol(Protocol):
     def __init__(self, vikit_entity, cryptor=None,
                  ack_timeout=10, retry_times=5):
         """"""
-        self.ackpool = ackpool.ACKPool()
+        self.ack_pool = ackpool.ACKPool()
         self.serializer = serializer.Serializer(cryptor)
         
         #
@@ -72,7 +73,10 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def handle_obj(self, obj):
         """"""
-        self.entity.on_received_obj(obj)
+        if isinstance(obj, welcome_action.VikitWelcomeAction):
+            self.entity.on_received_obj(obj, twisted_conn=self)
+        else:
+            self.entity.on_received_obj(obj)
 
     #----------------------------------------------------------------------
     def send(self, obj):
@@ -96,12 +100,13 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def connectionLost(self, reason):
         """"""
-        pass
+        self.entity.on_connection_lost(self, reason)
     
     #----------------------------------------------------------------------
     def connectionMade(self):
         """"""
-        
+        self.send(welcome_action.VikitWelcomeAction(self.entity.id))
+        self.entity.on_connection_made(self)
         
         
 ########################################################################
@@ -122,6 +127,29 @@ class VikitTwistedProtocolFactory(Factory):
         return VikitTwistedProtocol(self.entity, self.cryptor,
                                     self.ack_timeout,
                                     self.retry_times)
+
+########################################################################
+class VikitTwistedProtocolClientFactory(ClientFactory):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, entity, cryptor=None, ack_timeout=10,
+                 retry_times=5):
+        """Constructor"""
+        self.entity = entity
+        self.cryptor = cryptor
+        self.ack_timeout = ack_timeout
+        self.retry_times = retry_times
+        
+    #----------------------------------------------------------------------
+    def buildProtocol(self, addr):
+        """"""
+        return VikitTwistedProtocol(self.entity, self.cryptor,
+                                    self.ack_timeout, self.retry_times)
+        
+        
+    
+    
         
     
     

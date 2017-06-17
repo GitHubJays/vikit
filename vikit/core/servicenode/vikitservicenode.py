@@ -6,23 +6,30 @@
   Created: 06/16/17
 """
 
+from ..actions import welcome_action
 from . import vikitservice
 from ..basic import vikitbase
+from ..utils.singleton import Singleton
 from ..launch.interfaces import LauncherIf
-from ..common.vikitdatas import vikitservicedesc, vikitservicelauncherinfo, vikitserviceinfo
+from ..vikitdatas import vikitservicedesc, vikitservicelauncherinfo, vikitserviceinfo
 
 ########################################################################
-class VikitServiceNode(vikitbase.VikitBase):
+class VikitServiceNode(vikitbase.VikitBase, Singleton):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, id):
         """Constructor"""
-        
+        self._id = id
         #
         # launcher bind
         #
         self._dict_launcher = {}
+    
+    @property
+    def id(self):
+        """"""
+        return self._id
     
     #----------------------------------------------------------------------
     def start_service(self, id, module_name, service_config=None,
@@ -86,10 +93,27 @@ class VikitServiceNode(vikitbase.VikitBase):
         else:
             raise StandardError('shutdown a service not existed')
     
+    #
+    # core callback
+    #
     #----------------------------------------------------------------------
-    def on_received_obj(self):
+    def on_received_obj(self, obj, *args, **kw):
         """"""
-        raise NotImplemented()
+        if isinstance(obj, welcome_action.VikitWelcomeAction):
+            #raise StandardError()
+            pass
+        else:
+            raise NotImplementedError()
+    
+    #----------------------------------------------------------------------
+    def on_connection_lost(self, *v, **kw):
+        """"""
+        pass
+    
+    #----------------------------------------------------------------------
+    def on_connection_made(self, *v, **kw):
+        """"""
+        pass
         
         
             

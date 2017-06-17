@@ -13,7 +13,7 @@ from ..common import bases
 from ..basic import result
 from ..basic import mod
 from ..basic import vikitbase
-from ..common.vikitdatas import vikitservicedesc
+from ..vikitdatas import vikitservicedesc
 
 ##
 ## define state
@@ -180,10 +180,24 @@ class VikitService(vikitbase.VikitBase):
                 
         print(result_obj._dict_obj)
     
+    #
+    # core callback 
+    #
     #----------------------------------------------------------------------
     def on_received_obj(self):
         """"""
         raise NotImplemented()
+    
+    #----------------------------------------------------------------------
+    def on_connection_lost(self, *v, **kw):
+        """"""
+        pass
+    
+    #----------------------------------------------------------------------
+    def on_connection_made(self, *v, **kw):
+        """"""
+        pass
+        
     
     #
     # utils

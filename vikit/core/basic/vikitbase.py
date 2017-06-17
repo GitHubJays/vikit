@@ -18,3 +18,13 @@ class VikitBase(object):
     def on_received_obj(self):
         """"""
         pass
+    
+    @abstractmethod
+    def on_connection_made(self, *vargs, **kw):
+        """"""
+        pass
+    
+    @abstractmethod
+    def on_connection_lost(self, *vargs, **kw):
+        """"""
+        pass

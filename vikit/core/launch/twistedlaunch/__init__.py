@@ -1,1 +1,2 @@
 from tsdlauncher import TwistdLauncher
+from tsdconnector import TwistdConnector
