@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+#coding:utf-8
+"""
+  Author:   --<v1ll4n>
+  Purpose: run client for platform
+  Created: 05/23/17
+"""
+
+import time
+
+from twisted.internet import reactor    
+from vikit.core.vikitclient import vikitclient
+from vikit.core.launch.twistedlaunch import TwistdConnector
+from vikit.core.eventemitter import twistedemitter
+
+vc = vikitclient.VikitClient('test')
+
+conn = TwistdConnector(vc)
+
+conn.connect('127.0.0.1', 7034)
+
+emitter = twistedemitter.TwistedClientEventEmitter(conn)
+
+time.sleep(1)
+
+emitter.execute('demoid', {"target":'http://tbis.me',
+                           'payload':'adfa',
+                           'config':{'param1':True,
+                                     'param2':'asdfasd'}})
+
+reactor.run()
+

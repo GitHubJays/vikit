@@ -20,6 +20,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     _dict_service_node_recorder = {}
     _id = ''
     _dict_service_infos = {}
+    #_dict_record_sender = {}
 
     #----------------------------------------------------------------------
     def __init__(self, id):
@@ -32,10 +33,21 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         return self._id
     
     #----------------------------------------------------------------------
+    def get_sender(self, id):
+        """"""
+        return self._dict_service_node_recorder.get(id, {}).get('sender')
+    
+    #----------------------------------------------------------------------
+    def regist_sender(self):
+        """"""
+        #self._dict_record_sender[id] = sender
+        
+    
+    #----------------------------------------------------------------------
     def on_received_obj(self, obj, *args, **kw):
         """"""
         if isinstance(obj, welcome_action.VikitWelcomeAction):
-            self.regist_service_node(obj.id, **kw)
+            self.handle_welcome_obj(obj, *args, **kw)
         elif isinstance(obj, heartbeat_action.HeartBeatAction):
             self.update_from_heartbeat(obj)
         else:
@@ -50,6 +62,14 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     def on_connection_made(self, *v, **kw):
         """"""
         pass
+    
+    #----------------------------------------------------------------------
+    def handle_welcome_obj(self, obj, *v, **kw):
+        """"""
+        #
+        # regist node
+        #
+        self.regist_service_node(obj.id, **kw)
     
     #----------------------------------------------------------------------
     def update_from_heartbeat(self, heartbeat_obj):

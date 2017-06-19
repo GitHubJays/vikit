@@ -82,8 +82,8 @@ def stop():
     print('[!] stop!')
     reactor.stop()
 
-print('[5] 5 later stop')
-reactor.callLater(5, stop)
+#print('[5] 5 later stop')
+#reactor.callLater(5, stop)
 
 print('[+] main loop')
 reactor.run()

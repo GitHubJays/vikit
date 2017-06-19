@@ -74,9 +74,10 @@ class VikitTwistedProtocol(Protocol):
     def handle_obj(self, obj):
         """"""
         if isinstance(obj, welcome_action.VikitWelcomeAction):
-            self.entity.on_received_obj(obj, twisted_conn=self)
+            self.id = obj.id
+            self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
         else:
-            self.entity.on_received_obj(obj)
+            self.entity.on_received_obj(obj, from_id=self.id)
 
     #----------------------------------------------------------------------
     def send(self, obj):
@@ -144,8 +145,10 @@ class VikitTwistedProtocolClientFactory(ClientFactory):
     #----------------------------------------------------------------------
     def buildProtocol(self, addr):
         """"""
-        return VikitTwistedProtocol(self.entity, self.cryptor,
+        _ret = VikitTwistedProtocol(self.entity, self.cryptor,
                                     self.ack_timeout, self.retry_times)
+        
+        return _ret
         
         
     

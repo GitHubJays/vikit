@@ -6,9 +6,11 @@
   Created: 06/18/17
 """
 
+import psutil
+
 from . import base
 
-#from ..vikitdatas import healthinfo
+from ..vikitdatas import healthinfo
 
 ########################################################################
 class HeartBeatAction(base.BaseAction):
@@ -22,6 +24,11 @@ class HeartBeatAction(base.BaseAction):
         assert isinstance(service_infos, list)
         self.service_infos = service_infos
 
+        if health_info:
+            assert isinstance(health_info, healthinfo.HealthInfo)
+        else:
+            health_info = healthinfo.HealthInfo(cpu_percent=psutil.cpu_percent(),
+                                                ram_percent=psutil.virtual_memory().percent)
         self.health_info = health_info
         
     @property

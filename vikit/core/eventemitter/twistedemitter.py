@@ -10,10 +10,11 @@ from twisted.internet import task
 
 from . import emitterbase
 from ..platform import vikitplatform
-from ..servicenode import vikitservicenode
+from ..servicenode import vikitservicenode, vikitservice
+from ..vikitclient import vikitclient
 from ..launch.twistedlaunch import TwistdLauncher
 from ..launch import twistedbase
-from ..actions import servicenode_actions, heartbeat_action
+from ..actions import servicenode_actions, heartbeat_action, task_action
 
 ########################################################################
 class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
@@ -75,7 +76,7 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
     #----------------------------------------------------------------------
     def get_sender(self):
         """"""
-        return self.launcher.connector.transport.protocol
+        return self.launcher.connector.result
         
     
     #----------------------------------------------------------------------
@@ -100,5 +101,78 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
         _connector = self.get_sender()
         #print(_connector)
         assert isinstance(_connector, twistedbase.VikitTwistedProtocol)
-        print(_heartbeat)
+        #print(_heartbeat)
         _connector.send(_heartbeat)
+
+########################################################################
+class TwistedClientEventEmitter(emitterbase.EmitterBase):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, connector):
+        """Constructor"""
+        emitterbase.EmitterBase.__init__(self, connector)
+        
+        #assert isinstance(self.launcher.entity, vikitclient.VikitClient)
+        self.client = connector.entity
+        assert isinstance(self.client, vikitclient.VikitClient)
+        
+        self.client.regist_execute_callback(self._send_executeaction)
+        
+    
+    @property
+    def _conn(self):
+        """"""
+        return self.launcher.connector.transport.protocol
+    
+    #----------------------------------------------------------------------
+    def get_sender(self):
+        """"""
+        return self._conn   
+    
+    #----------------------------------------------------------------------
+    def execute(self, task_id, params):
+        """"""
+        self.client.execute_task(task_id, params)
+        
+    #----------------------------------------------------------------------
+    def _send_executeaction(self, task_id, params):
+        """"""
+        #conn = self.get_sender()
+        
+        #
+        # build execute action
+        #
+        taskaction = task_action.VikitExecuteTaskAction(task_id, params)
+        
+        conn = self.client.get_sender()
+        conn.send(taskaction)
+        
+    
+
+########################################################################
+class TwistedServiceEventEmitter(emitterbase.EmitterBase):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, connector):
+        """Constructor"""
+        emitterbase.EmitterBase.__init__(self, connector)
+        
+        self.service = connector.entity
+        assert isinstance(self.service, vikitservice.VikitService)
+        
+        self.service.regist_result_callback(callback)
+        
+    #----------------------------------------------------------------------
+    def _send_(self, ):
+        """"""
+        
+        
+    
+    
+        
+        
+        
+    
+    

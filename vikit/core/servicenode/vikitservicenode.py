@@ -17,6 +17,8 @@ from ..vikitdatas import vikitservicedesc, vikitservicelauncherinfo, \
 ########################################################################
 class VikitServiceNode(vikitbase.VikitBase, Singleton):
     """"""
+    
+    
 
     #----------------------------------------------------------------------
     def __init__(self, id, heartbeat_interval=10):
@@ -36,11 +38,22 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         # private
         #
         self._callback_start_heartbeat = None
+        self._sender = None
     
     @property
     def id(self):
         """"""
         return self._id
+    
+    #----------------------------------------------------------------------
+    def get_sender(self):
+        """"""
+        return self._sender
+    
+    #----------------------------------------------------------------------
+    def regist_sender(self, sender):
+        """"""
+        self._sender = sender
     
     @property
     def heartbeat_interval(self):
@@ -153,7 +166,7 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
     def on_received_obj(self, obj, *args, **kw):
         """"""
         if isinstance(obj, welcome_action.VikitWelcomeAction):
-            self._on_welcomed_success()
+            self._on_welcomed_success(obj, **kw)
         elif isinstance(obj, servicenode_actions.StartServiceAction):
             self.start_service(id=obj.service_id,
                                module_name=obj.module_name,
@@ -173,9 +186,11 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         print('[!] service node connection made')
     
     #----------------------------------------------------------------------
-    def _on_welcomed_success(self):
+    def _on_welcomed_success(self, obj, **kw):
         """"""
         self.start_heartbeat(self.heartbeat_interval)
+        
+        self.regist_sender(sender=kw.get('sender'))
         
         
             

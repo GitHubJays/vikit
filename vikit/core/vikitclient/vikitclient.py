@@ -6,8 +6,11 @@
   Created: 06/16/17
 """
 
+from ..basic import vikitbase
+from ..actions import welcome_action
+
 ########################################################################
-class VikitClient(object):
+class VikitClient(vikitbase.VikitBase):
     """"""
 
     #----------------------------------------------------------------------
@@ -15,12 +18,28 @@ class VikitClient(object):
         """Constructor"""
         
         self._id = id
+        self._sender = None
         
         #
         # callback chains
         #
         self._list_result_callback_chains = []
         self._list_execute_callback_chains = []
+    
+    @property
+    def id(self):
+        """"""
+        return self._id
+    
+    #----------------------------------------------------------------------
+    def get_sender(self):
+        """"""
+        return self._sender
+    
+    #----------------------------------------------------------------------
+    def regist_sender(self, sender):
+        """"""
+        self._sender = sender
         
         
     #
@@ -48,9 +67,12 @@ class VikitClient(object):
     # core callbacks
     #
     #----------------------------------------------------------------------
-    def on_received_obj(self, obj):
+    def on_received_obj(self, obj, *v, **kw):
         """"""
-        raise NotImplemented()
+        if isinstance(obj, welcome_action.VikitWelcomeAction):
+            self.handle_welcome_obj(obj, *v, **kw)
+        else:
+            raise NotImplemented()
     
     #----------------------------------------------------------------------
     def on_received_result(self, result_dict):
@@ -68,6 +90,21 @@ class VikitClient(object):
                 _r = i[0](_r)        
         
         return _r
+    
+    #----------------------------------------------------------------------
+    def on_connection_lost(self, *v, **k):
+        """"""
+        pass
+    
+    #----------------------------------------------------------------------
+    def on_connection_made(self, *v, **k):
+        """"""
+        pass
+    
+    #----------------------------------------------------------------------
+    def handle_welcome_obj(self, obj, *v, **kw):
+        """"""
+        self.regist_sender(kw.get('sender'))
     
     #
     # utils

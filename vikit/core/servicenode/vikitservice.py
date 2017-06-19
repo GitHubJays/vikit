@@ -14,6 +14,7 @@ from ..basic import result
 from ..basic import mod
 from ..basic import vikitbase
 from ..vikitdatas import vikitservicedesc
+from ..actions import welcome_action, task_action
 
 ##
 ## define state
@@ -105,8 +106,12 @@ class VikitService(vikitbase.VikitBase):
         
         #
         # record task_state(running or state)
+        # record client_record
+        # record task_from_id
         #
         self._dict_task_state = {}
+        self._dict_task_from_client_id = {}
+        self._dict_client_record = {}
         
         #
         # result callback chains
@@ -177,16 +182,22 @@ class VikitService(vikitbase.VikitBase):
                     i[1](e)
             else:
                 _r = i[0](_r)
-                
+        
         print(result_obj._dict_obj)
     
     #
     # core callback 
     #
     #----------------------------------------------------------------------
-    def on_received_obj(self):
+    def on_received_obj(self, obj, *v, **kw):
         """"""
-        raise NotImplemented()
+        print('[*] service got obj: {}'.format(obj))
+        if isinstance(obj, welcome_action.VikitWelcomeAction):
+            self.handle_welcome_obj(obj, **kw)
+        elif isinstance(obj, task_action.VikitExecuteTaskAction):
+            self.handle_executetaskaction_obj(obj, from_id)
+        else:
+            raise NotImplemented()
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
@@ -197,6 +208,22 @@ class VikitService(vikitbase.VikitBase):
     def on_connection_made(self, *v, **kw):
         """"""
         pass
+    
+    #----------------------------------------------------------------------
+    def handle_welcome_obj(self, obj, **kw):
+        """"""
+        if not self._dict_client_record.has_key(obj.id):
+            self._dict_client_record[obj.id] = {}
+
+        self._dict_client_record[obj.id].update(kw)
+    
+    #----------------------------------------------------------------------
+    def handle_executetaskaction_obj(self, obj, from_id):
+        """"""
+        #raise NotImplemented()
+        assert isinstance(obj, task_action.VikitExecuteTaskAction)
+        self._dict_task_from_client_id[obj.id]
+        
         
     
     #
@@ -224,5 +251,17 @@ class VikitService(vikitbase.VikitBase):
                                                  mod_info=self.get_mod_info())
         return _ret.get_dict()
     
+    
+    #----------------------------------------------------------------------
+    def get_sender(self, id):
+        """"""
+        return self._dict_client_record.get(id, {}).get('sender')
+    
+    #----------------------------------------------------------------------
+    def regist_sender(self):
+        """"""
+        pass
+        
+        
     
     

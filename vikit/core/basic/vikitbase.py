@@ -28,3 +28,14 @@ class VikitBase(object):
     def on_connection_lost(self, *vargs, **kw):
         """"""
         pass
+    
+    @abstractmethod
+    def get_sender(self, id=None):
+        """"""
+        pass
+    
+    @abstractmethod
+    def regist_sender(self, sender, id=None):
+        """"""
+        pass
+        
