@@ -12,6 +12,7 @@ from twisted.internet import reactor
 
 import unittest
 import time
+import pickle
 
 from vikit.core.basic.target import Target, TargetEnum, \
      TYPE_IPV4, TYPE_IPV6, TYPE_NETLOC, \
@@ -41,6 +42,8 @@ from vikit.core.vikitclient import vikitclient
 from vikit.core.launch.twistedlaunch import TwistdLauncher
 from vikit.core.vikitdatas import vikitserviceinfo
 from vikit.core.vikitdatas import vikitservicedesc
+from vikit.core.actions import heartbeat_action
+from vikit.core.vikitdatas import healthinfo
 
 #
 # test platform
@@ -406,13 +409,15 @@ class VikitTester(unittest.TestCase):
         time.sleep(3)
     
     #----------------------------------------------------------------------
-    def test_platform(self):
+    def test_heartbeat_seri(self):
         """"""
         #
         # function test
         #
-        pass
+        hb = heartbeat_action.HeartBeatAction('1',[], healthinfo.HealthInfo())
         
+        #pickle.dumps(hb)
+        pickle.dumps(vikitservicedesc.VikitServiceDesc('asd',{}))
     
         
         

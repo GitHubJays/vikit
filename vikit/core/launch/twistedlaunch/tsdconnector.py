@@ -48,8 +48,10 @@ class TwistdConnector(ConnecterIf):
                                                     cryptor,
                                                     ack_timeout,
                                                     retry_times)
-        self.connector = reactor.connectTCP(target_host, target_port, factory, 
+        _twistedconnect = reactor.connectTCP(target_host, target_port, factory, 
                                             connect_timeout)
+        
+        self.connector = _twistedconnect
         
     #----------------------------------------------------------------------
     def stop(self):

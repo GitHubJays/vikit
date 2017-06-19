@@ -30,7 +30,11 @@ class VikitServiceInfo(base.VikitDatas):
         return {'desc':self.desc.get_dict(),
                 'laucher_info':self.linfo.get_dict(),
                 'service_node_id':self.service_node_id}
-        
+    
+    @property
+    def id(self):
+        """"""
+        return self.desc.id
         
     
     
