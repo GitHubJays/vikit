@@ -101,7 +101,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def connectionLost(self, reason):
         """"""
-        self.entity.on_connection_lost(self, reason)
+        self.entity.on_connection_lost(self, reason, from_id=self.id)
     
     #----------------------------------------------------------------------
     def connectionMade(self):

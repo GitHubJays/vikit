@@ -30,10 +30,15 @@ class VikitResponseResultAction(base.BaseAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, result_obj):
         """Constructor"""
         
-        
+        self.result = result_obj
+    
+    @property    
+    def id(self):
+        """"""
+        return self.result.get('task_id')
     
     
         

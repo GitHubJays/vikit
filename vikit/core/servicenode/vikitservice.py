@@ -112,11 +112,17 @@ class VikitService(vikitbase.VikitBase):
         self._dict_task_state = {}
         self._dict_task_from_client_id = {}
         self._dict_client_record = {}
+        self._dict_sender_record = {}
         
         #
         # result callback chains
         #
         self._list_callback_chains = []
+        
+        #
+        # regist result callback
+        #
+        self.regist_result_callback(self.send_result_back)
     
     #
     # basic property
@@ -158,6 +164,30 @@ class VikitService(vikitbase.VikitBase):
     def quit(self):
         """"""
         self._mod.close()
+    
+    #----------------------------------------------------------------------
+    def send_result_back(self, result_dict):
+        """"""
+        #assert isinstance(result_dict, dict)
+        
+        print('[*] got result success!')
+        _tid = result_dict.get('task_id')
+        
+        
+        _from = self._dict_task_from_client_id.get(_tid)
+        print('[*] got task source! ')
+        
+        _sender = self.get_sender(_from)
+        print('[*] got task source sender')
+        
+        #
+        # build ResponseResultAction
+        #
+        rspresultaction = task_action.VikitResponseResultAction(result_dict)
+        print('[*] build')
+        
+        _sender.send(rspresultaction)
+        print('[*] send result back successfully')
         
     #
     # core callback functions
@@ -192,12 +222,15 @@ class VikitService(vikitbase.VikitBase):
     def on_received_obj(self, obj, *v, **kw):
         """"""
         print('[*] service got obj: {}'.format(obj))
-        if isinstance(obj, welcome_action.VikitWelcomeAction):
-            self.handle_welcome_obj(obj, **kw)
-        elif isinstance(obj, task_action.VikitExecuteTaskAction):
-            self.handle_executetaskaction_obj(obj, from_id)
+        from_id = kw.get('from_id')
+        if from_id not in self._dict_client_record:
+            if isinstance(obj, welcome_action.VikitWelcomeAction):
+                self.handle_welcome_obj(obj, **kw)
         else:
-            raise NotImplemented()
+            if isinstance(obj, task_action.VikitExecuteTaskAction):
+                self.handle_executetaskaction_obj(obj, from_id)
+            else:
+                raise NotImplemented()
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
@@ -212,17 +245,34 @@ class VikitService(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def handle_welcome_obj(self, obj, **kw):
         """"""
+        #
+        # record ordinary attrs
+        #
         if not self._dict_client_record.has_key(obj.id):
             self._dict_client_record[obj.id] = {}
 
         self._dict_client_record[obj.id].update(kw)
+        
+        #
+        # record sender
+        #
+        self.regist_sender(obj.id, kw.get('sender'))
     
     #----------------------------------------------------------------------
     def handle_executetaskaction_obj(self, obj, from_id):
         """"""
         #raise NotImplemented()
         assert isinstance(obj, task_action.VikitExecuteTaskAction)
-        self._dict_task_from_client_id[obj.id]
+        
+        #
+        # record sender_id
+        #
+        self._dict_task_from_client_id[obj.id] = from_id
+        
+        #
+        # record params
+        #
+        self.execute_task(obj.id, obj.params)
         
         
     
@@ -255,12 +305,14 @@ class VikitService(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def get_sender(self, id):
         """"""
-        return self._dict_client_record.get(id, {}).get('sender')
+        return self._dict_sender_record.get(id)
     
     #----------------------------------------------------------------------
-    def regist_sender(self):
+    def regist_sender(self, id, sender):
         """"""
-        pass
+        self._dict_sender_record[id] = sender
+        
+    
         
         
     

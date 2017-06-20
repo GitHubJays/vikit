@@ -20,7 +20,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     _dict_service_node_recorder = {}
     _id = ''
     _dict_service_infos = {}
-    #_dict_record_sender = {}
+    _dict_record_sender = {}
 
     #----------------------------------------------------------------------
     def __init__(self, id):
@@ -38,20 +38,23 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         return self._dict_service_node_recorder.get(id, {}).get('sender')
     
     #----------------------------------------------------------------------
-    def regist_sender(self):
+    def regist_sender(self, id, sender):
         """"""
-        #self._dict_record_sender[id] = sender
+        self._dict_record_sender[id] = sender
         
     
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *args, **kw):
         """"""
-        if isinstance(obj, welcome_action.VikitWelcomeAction):
-            self.handle_welcome_obj(obj, *args, **kw)
-        elif isinstance(obj, heartbeat_action.HeartBeatAction):
-            self.update_from_heartbeat(obj)
+        _from = kw.get('from_id')
+        if not _from in self._dict_record_sender:
+            if isinstance(obj, welcome_action.VikitWelcomeAction):
+                self.handle_welcome_obj(obj, *args, **kw)
         else:
-            raise NotImplemented()
+            if isinstance(obj, heartbeat_action.HeartBeatAction):
+                self.update_from_heartbeat(obj)
+            else:
+                raise NotImplemented()
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
@@ -70,6 +73,11 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         # regist node
         #
         self.regist_service_node(obj.id, **kw)
+        
+        #
+        # regist sender
+        #
+        self.regist_sender(obj.id, kw['sender'])
     
     #----------------------------------------------------------------------
     def update_from_heartbeat(self, heartbeat_obj):

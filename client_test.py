@@ -21,12 +21,18 @@ conn.connect('127.0.0.1', 7034)
 
 emitter = twistedemitter.TwistedClientEventEmitter(conn)
 
-time.sleep(1)
+#time.sleep(1)
 
-emitter.execute('demoid', {"target":'http://tbis.me',
-                           'payload':'adfa',
-                           'config':{'param1':True,
-                                     'param2':'asdfasd'}})
+#----------------------------------------------------------------------
+def test():
+    """"""
+    print('test called!')
+    emitter.execute('demoid', {"target":'http://tbis.me',
+                               'payload':'adfa',
+                               'config':{'param1':True,
+                                         'param2':'asdfasd'}})    
 
+print('call test 2s later')
+reactor.callLater(2, test)
 reactor.run()
 

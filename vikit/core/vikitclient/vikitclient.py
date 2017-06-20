@@ -7,7 +7,7 @@
 """
 
 from ..basic import vikitbase
-from ..actions import welcome_action
+from ..actions import welcome_action, task_action
 
 ########################################################################
 class VikitClient(vikitbase.VikitBase):
@@ -69,16 +69,21 @@ class VikitClient(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *v, **kw):
         """"""
-        if isinstance(obj, welcome_action.VikitWelcomeAction):
-            self.handle_welcome_obj(obj, *v, **kw)
+        print('[~] client got : {}'.format(obj))
+        if not self.get_sender():
+            if isinstance(obj, welcome_action.VikitWelcomeAction):
+                self.handle_welcome_obj(obj, *v, **kw)
+            else:
+                raise NotImplemented()
         else:
-            raise NotImplemented()
+            if isinstance(obj, task_action.VikitResponseResultAction):
+                self.handle_result_response_obj(obj, *v, **kw)
     
     #----------------------------------------------------------------------
     def on_received_result(self, result_dict):
         """"""
         assert isinstance(result_dict, dict)
-        
+        print('[~] client got result : {}'.format(result_dict))
         _r = result_dict
         for i in self._list_result_callback_chains:
             if i[1]:
@@ -105,6 +110,12 @@ class VikitClient(vikitbase.VikitBase):
     def handle_welcome_obj(self, obj, *v, **kw):
         """"""
         self.regist_sender(kw.get('sender'))
+    
+    #----------------------------------------------------------------------
+    def handle_result_response_obj(self, obj, *v, **kw):
+        """"""
+        assert isinstance(obj, task_action.VikitResponseResultAction)
+        self.on_received_result(obj.result)
     
     #
     # utils

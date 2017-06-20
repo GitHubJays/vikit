@@ -120,11 +120,6 @@ class TwistedClientEventEmitter(emitterbase.EmitterBase):
         self.client.regist_execute_callback(self._send_executeaction)
         
     
-    @property
-    def _conn(self):
-        """"""
-        return self.launcher.connector.transport.protocol
-    
     #----------------------------------------------------------------------
     def get_sender(self):
         """"""
@@ -147,6 +142,8 @@ class TwistedClientEventEmitter(emitterbase.EmitterBase):
         
         conn = self.client.get_sender()
         conn.send(taskaction)
+        
+        return task_id, params
         
     
 
