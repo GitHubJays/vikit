@@ -16,6 +16,8 @@ class VikitWelcomeAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __init__(self, id):
         """Constructor"""
+        ackbase.Ackable.__init__(self)
+        
         self.id = id
         
     

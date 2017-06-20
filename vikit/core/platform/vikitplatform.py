@@ -54,7 +54,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
             if isinstance(obj, heartbeat_action.HeartBeatAction):
                 self.update_from_heartbeat(obj)
             else:
-                raise NotImplemented()
+                print('[platform] No handler for {}'.format(obj))
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):

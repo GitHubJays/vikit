@@ -6,10 +6,14 @@
   Created: 06/02/17
 """
 
+from twisted.internet import reactor
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
 from . import ackpool, serializer, crypto
 from ..actions import welcome_action
+
+SPLITE_CHARS = '$'
+START_CHAR = '#'
 
 ########################################################################
 class VikitTwistedProtocol(Protocol):
@@ -32,6 +36,14 @@ class VikitTwistedProtocol(Protocol):
         # vikit entity
         #
         self.entity = vikit_entity
+        
+        #
+        # set id
+        #
+        self.id = None
+        
+        self._buff = ''
+        self._buff_datas = []
 
     #
     # data proccess
@@ -39,13 +51,51 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def dataReceived(self, data):
         """"""
-        #assert isinstance(self.serializer, serializer.Serializer)
-        obj = self.serializer.unserialize(data)
-        self.objReceived(obj)
+        #
+        # pick for stream
+        #
+        print('got data: {}'.format(data))
+        state = 'pending'
+        for i in data:
+            #print i
+            if len(self._buff):
+                state = 'open'
+                
+            if i == START_CHAR:
+                state = 'open'
+                continue
+                
+            if i == SPLITE_CHARS:
+                if state == 'open':
+                    state = 'close'
+                else:
+                    pass
+            
+            if state == 'open':
+                self._buff = self._buff + i
+            
+            if state == 'close':
+                self._buff_datas.append(self._buff)
+                self._buff = ''
+                state = 'pending'
+        
+        #print self._buff_datas
+        #for i in self._buff_datas:
+        while True:
+            i = self._buff_datas.pop()
+            obj = self.serializer.unserialize(i)
+            #reactor.callInThread(self.objReceived, obj)
+            self.objReceived(obj)
+
+            if self._buff_datas:
+                pass
+            else:
+                break
 
     #----------------------------------------------------------------------
     def objReceived(self, obj):
         """"""
+        print('[twisted] got obj: {}'.format(obj))
         #
         # just got a ack 
         #    ack and drop
@@ -54,7 +104,7 @@ class VikitTwistedProtocol(Protocol):
             #
             # ack object
             #
-            self.ack_pool.ack(obj.id)
+            self.ack_pool.ack(obj.token)
             return 
         
         #
@@ -65,7 +115,7 @@ class VikitTwistedProtocol(Protocol):
             #
             # send ack
             #
-            self._send(ackpool.Ack(obj.id))        
+            self._send(ackpool.Ack(obj.token))        
 
 
         self.handle_obj(obj)
@@ -73,6 +123,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def handle_obj(self, obj):
         """"""
+        #print('[twisted] handle obj: {}'.format(obj))
         if isinstance(obj, welcome_action.VikitWelcomeAction):
             self.id = obj.id
             self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
@@ -83,7 +134,7 @@ class VikitTwistedProtocol(Protocol):
     def send(self, obj):
         """"""
         if isinstance(obj, ackpool.Ackable):
-            self.ack_pool.add(obj.id, self._send, (obj,), 
+            self.ack_pool.add(obj.token, self._send, (obj,), 
                               ack_timeout=self.ack_timeout, 
                               retry_items=self.retry_times)
 
@@ -93,7 +144,10 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def _send(self, obj):
         """"""
+        print('[twisted] send obj: {}'.format(obj))
         tessxt = self.serializer.serialize(obj)
+        #print('[twisted] send raw: {}'.format(tessxt))
+        tessxt = START_CHAR + tessxt + SPLITE_CHARS
         self.transport.write(tessxt)
         
         return 

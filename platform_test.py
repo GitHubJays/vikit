@@ -17,11 +17,16 @@ from vikit.core.eventemitter import twistedemitter
 p = vikitplatform.VikitPlatform('platform')
 l = TwistdLauncher(p)
 l.serve(port=7000, net_if='')
+emitter = twistedemitter.TwistedPlatformEventEmitter(l)
 
 
 #----------------------------------------------------------------------
 def _start_service():
     """"""
-    pass
+    emitter.start_service('test', '123', 'demo', {'port':7034,
+                                                  'net_if':''})
+    
+    
+reactor.callLater(5, _start_service)
 
 reactor.run()

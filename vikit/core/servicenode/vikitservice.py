@@ -221,7 +221,7 @@ class VikitService(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *v, **kw):
         """"""
-        print('[*] service got obj: {}'.format(obj))
+        #print('[*] service got obj: {}'.format(obj))
         from_id = kw.get('from_id')
         if from_id not in self._dict_client_record:
             if isinstance(obj, welcome_action.VikitWelcomeAction):
@@ -230,7 +230,7 @@ class VikitService(vikitbase.VikitBase):
             if isinstance(obj, task_action.VikitExecuteTaskAction):
                 self.handle_executetaskaction_obj(obj, from_id)
             else:
-                raise NotImplemented()
+                print('[!] Sorry No Handler For This Request')
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):

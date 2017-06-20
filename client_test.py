@@ -30,9 +30,26 @@ def test():
     emitter.execute('demoid', {"target":'http://tbis.me',
                                'payload':'adfa',
                                'config':{'param1':True,
+                                         'param2':'asdfasd'}})
+    emitter.execute('demoissd', {"target":'http://tbis.me',
+                               'payload':'adfa',
+                               'config':{'param1':True,
                                          'param2':'asdfasd'}})    
+    
+    
 
 print('call test 2s later')
 reactor.callLater(2, test)
+
+#----------------------------------------------------------------------
+def stop_client():
+    """"""
+    conn.stop()
+    
+
+#reactor.callLater(6, stop_client)
+
+
+
 reactor.run()
 

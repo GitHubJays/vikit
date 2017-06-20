@@ -57,10 +57,11 @@ class TwistdConnector(ConnecterIf):
         _twistedconnect = client.connectTCP(target_host, target_port, timeout=connect_timeout)
         self.connector = _twistedconnect
         
+        
     #----------------------------------------------------------------------
     def stop(self):
         """"""
-        self.connector.connectionLost('user abort')
+        self.entity.get_sender().connectionLost('user abort')
         
     @property
     def working(self):

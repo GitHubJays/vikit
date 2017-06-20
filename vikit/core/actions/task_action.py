@@ -16,6 +16,9 @@ class VikitExecuteTaskAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __init__(self, task_id, params):
         """Constructor"""
+        #ackbase.Ackable.__init__(self)
+        self.token = ackbase.getuuid()
+        
         self.task_id = task_id
         self.params = params
         
@@ -32,7 +35,8 @@ class VikitResponseResultAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __init__(self, result_obj):
         """Constructor"""
-        
+        #ackbase.Ackable.__init__(self)
+        self.token = ackbase.getuuid()
         self.result = result_obj
     
     @property    

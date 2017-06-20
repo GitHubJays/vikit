@@ -16,6 +16,7 @@ class StartServiceAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __init__(self, service_id, module_name, launcher_type, launcher_config):
         """Constructor"""
+        ackbase.Ackable.__init__(self)
         self.service_id = service_id
         self.module_name = module_name
         self.launcher_type = launcher_type
