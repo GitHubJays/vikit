@@ -27,11 +27,15 @@ def _start_service():
     emitter.start_service('test', '123', 'demo', {'port':7034,
                                                   'net_if':''})
     
-    time.sleep(3)
+#----------------------------------------------------------------------
+def _stop_service():
+    """"""
+    print emitter.get_service_info()
     emitter.stop_service(service_id='123')
     
     
 reactor.callLater(5, _start_service)
+#reactor.callLater(7, _stop_service)
 
 #----------------------------------------------------------------------
 def _stop_platform():

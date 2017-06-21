@@ -26,7 +26,26 @@ class StartServiceAction(base.BaseAction, ackbase.Ackable):
     def id(self):
         """"""
         return self.service_id
+
+
+########################################################################
+class StopServiceAction(base.BaseAction, ackbase.Ackable):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, service_id):
+        """Constructor"""
+        ackbase.Ackable.__init__(self)
         
+        self.service_id = service_id
+        
+    @property
+    def id(self):
+        """"""
+        return self.service_id
+        
+    
+    
         
     
     

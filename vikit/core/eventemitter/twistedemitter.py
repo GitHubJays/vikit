@@ -27,7 +27,10 @@ class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
         
         self.platform = self.launcher.entity
         assert isinstance(self.platform, vikitplatform.VikitPlatform)
-        
+    
+    #
+    # stop / start service
+    #
     #----------------------------------------------------------------------
     def start_service(self, service_node_id, service_id,
                       module_name, launcher_config):
@@ -45,14 +48,39 @@ class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
         #
         # get conn
         #
-        _record = self.platform.get_service_node_record(service_node_id)
-        _conn = _record.get('twisted_conn')
+        _conn = self.platform.get_sender(service_node_id)
         assert isinstance(_conn, twistedbase.VikitTwistedProtocol)
         
         #
         # send it
         #
         _conn.send(_start_service_action)
+    
+    #----------------------------------------------------------------------
+    def stop_service(self, service_id):
+        """"""
+        
+        #
+        # build action
+        #
+        _stop_service_action = servicenode_actions.StopServiceAction(
+                                                                    service_id)
+        
+        #
+        # get conn
+        #
+        _infos = self.platform.get_service_info()
+        #print _infos
+        if _infos.has_key(service_id):
+            _serviceinfos = _infos.get(service_id)
+            node_id = _serviceinfos.get('service_node_id')
+            if node_id:
+                _conn = self.platform.get_sender(node_id)
+                _conn.send(_stop_service_action)
+            else:
+                print('[platform] no such service node id for service_id:{}.'.format(service_id))
+        else:
+            print('[platform] no such service id:{}'.format(service_id))
     
     #----------------------------------------------------------------------
     def get_service_info(self):

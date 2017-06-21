@@ -15,7 +15,7 @@ from vikit.core.launch.twistedlaunch import TwistdConnector
 n = vikitservicenode.VikitServiceNode('test', heartbeat_interval=2)
 c = TwistdConnector(n)
 t = twistedemitter.TwistedServiceNodeEventEmitter(c)
-c.connect('127.0.0.1', 7077)
+c.connect('127.0.0.1', 7000)
 
 #----------------------------------------------------------------------
 def shutdown_node():

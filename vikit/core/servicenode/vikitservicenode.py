@@ -14,6 +14,13 @@ from ..launch.interfaces import LauncherIf
 from ..vikitdatas import vikitservicedesc, vikitservicelauncherinfo, \
      vikitserviceinfo, healthinfo
 
+
+#
+# define state
+#
+state_WORK = 'work'
+state_PENDING = 'pending'
+
 ########################################################################
 class VikitServiceNode(vikitbase.VikitBase, Singleton):
     """"""
@@ -41,6 +48,11 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         self._callback_stop_heartbeat = None
         
         self._sender = None
+        
+        #
+        # state flag
+        #
+        self._state = state_PENDING
     
     @property
     def id(self):
@@ -208,15 +220,21 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *args, **kw):
         """"""
-        if isinstance(obj, welcome_action.VikitWelcomeAction):
-            self._on_welcomed_success(obj, **kw)
-        elif isinstance(obj, servicenode_actions.StartServiceAction):
-            self.start_service(id=obj.service_id,
-                               module_name=obj.module_name,
-                               launcher=obj.launcher_type,
-                               launcher_kw_config=obj.launcher_config)
+        if self._state == state_PENDING:
+            if isinstance(obj, welcome_action.VikitWelcomeAction):
+                self._on_welcomed_success(obj, **kw)
+            else:
+                pass
         else:
-            raise NotImplementedError()
+            if isinstance(obj, servicenode_actions.StartServiceAction):
+                self.start_service(id=obj.service_id,
+                                   module_name=obj.module_name,
+                                   launcher=obj.launcher_type,
+                                   launcher_kw_config=obj.launcher_config)
+            elif isinstance(obj, servicenode_actions.StopServiceAction):
+                self.shutdown_service(id=obj.id)
+            else:
+                raise NotImplementedError()
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
@@ -250,7 +268,7 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
     def _on_welcomed_success(self, obj, **kw):
         """"""
         self.start_heartbeat(self.heartbeat_interval)
-        
+        self._state = state_WORK
         
         
         

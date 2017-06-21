@@ -240,7 +240,10 @@ class VikitService(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def on_connection_made(self, *v, **kw):
         """"""
-        pass
+        #
+        # record sender
+        #
+        self.regist_sender(kw.get('from_id'), kw.get('sender'))
     
     #----------------------------------------------------------------------
     def handle_welcome_obj(self, obj, **kw):
@@ -256,7 +259,9 @@ class VikitService(vikitbase.VikitBase):
         #
         # record sender
         #
-        self.regist_sender(obj.id, kw.get('sender'))
+        self.regist_sender(kw.get('from_id'), kw.get('sender'))        
+        
+
     
     #----------------------------------------------------------------------
     def handle_executetaskaction_obj(self, obj, from_id):
