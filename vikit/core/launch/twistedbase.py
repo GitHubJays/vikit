@@ -54,7 +54,6 @@ class VikitTwistedProtocol(Protocol):
         #
         # pick for stream
         #
-        #print('got data: {}'.format(data))
         state = 'pending'
         for i in data:
             #print i
@@ -79,8 +78,6 @@ class VikitTwistedProtocol(Protocol):
                 self._buff = ''
                 state = 'pending'
         
-        #print self._buff_datas
-        #for i in self._buff_datas:
         while True:
             i = self._buff_datas.pop()
             obj = self.serializer.unserialize(i)
@@ -95,7 +92,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def objReceived(self, obj):
         """"""
-        print('[twisted] got obj: {}'.format(obj))
+        print('[twisted <-<-<-] {}'.format(obj))
         #
         # just got a ack 
         #    ack and drop
@@ -124,11 +121,11 @@ class VikitTwistedProtocol(Protocol):
     def handle_obj(self, obj):
         """"""
         #print('[twisted] handle obj: {}'.format(obj))
-        if isinstance(obj, welcome_action.VikitWelcomeAction):
+        if isinstance(obj, welcome_action.VikitWelcomeBase):
             self.id = obj.id
             self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
         else:
-            self.entity.on_received_obj(obj, from_id=self.id)
+            self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
 
     #----------------------------------------------------------------------
     def send(self, obj):
@@ -144,9 +141,8 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def _send(self, obj):
         """"""
-        print('[twisted] send obj: {}'.format(obj))
+        print('[twisted ->->->] {}'.format(obj))
         tessxt = self.serializer.serialize(obj)
-        #print('[twisted] send raw: {}'.format(tessxt))
         tessxt = START_CHAR + tessxt + SPLITE_CHARS
         self.transport.write(tessxt)
         

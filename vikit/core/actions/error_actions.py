@@ -27,6 +27,11 @@ class VikitErrorAction(base.BaseAction, ackbase.Ackable):
         """"""
         return self.from_id
     
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<VikitError: from:{} reason:{}>'.format(self.from_id, self.reason)
+    
     
         
         

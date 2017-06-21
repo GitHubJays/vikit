@@ -35,6 +35,11 @@ class HeartBeatAction(base.BaseAction):
     def id(self):
         """"""
         return self.service_node_id
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<HeartBeat from service_node_id:{}>'.format(self.id)
         
         
     

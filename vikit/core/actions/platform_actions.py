@@ -31,6 +31,11 @@ class VikitRequestServiceListPlatform(base.BaseAction, ackbase.Ackable):
         """"""
         return self._client_id
     
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<RequestServiceList from client_id:{}>'.format(self.id)
+    
 ########################################################################
 class VikitResponseServiceListPlatform(base.BaseAction, ackbase.Ackable):
     """"""
@@ -43,6 +48,11 @@ class VikitResponseServiceListPlatform(base.BaseAction, ackbase.Ackable):
         
         assert isinstance(service_info_list, dict)
         self.services_dict = service_info_list
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<ResponseServiceList from platform>'
         
     
     

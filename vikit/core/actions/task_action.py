@@ -26,6 +26,11 @@ class VikitExecuteTaskAction(base.BaseAction, ackbase.Ackable):
     def id(self):
         """"""
         return self.task_id
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<ExecuteTask task_id:{} params:{}>'.format(self.task_id, self.params)
         
 
 ########################################################################
@@ -43,6 +48,12 @@ class VikitResponseResultAction(base.BaseAction, ackbase.Ackable):
     def id(self):
         """"""
         return self.result.get('task_id')
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<TaskResult task_id:{} result:{}>'.format(self.id,
+                                                          self.result)
     
     
         

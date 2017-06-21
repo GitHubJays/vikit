@@ -26,6 +26,13 @@ class StartServiceAction(base.BaseAction, ackbase.Ackable):
     def id(self):
         """"""
         return self.service_id
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<StartService service_id:{} module_name:{} config:{}>'.format(self.service_id, 
+                                                                              self.module_name,
+                                                                              self.launcher_config)
 
 
 ########################################################################
@@ -43,6 +50,11 @@ class StopServiceAction(base.BaseAction, ackbase.Ackable):
     def id(self):
         """"""
         return self.service_id
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<StopService service_id:{}>'.format(self.service_id)
         
     
     

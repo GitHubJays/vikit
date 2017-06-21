@@ -135,7 +135,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         #
         # regist sender
         #
-        self.regist_sender(kw['from_id'], kw['sender'])        
+        pass        
     
     #----------------------------------------------------------------------
     def handle_welcome_obj(self, obj, *v, **kw):
@@ -148,7 +148,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         #
         # regist sender
         #
-        #self.regist_sender(obj.id, kw['sender'])
+        self.regist_sender(obj.id, kw['sender'])
     
     #----------------------------------------------------------------------
     def handle_client_welcome_obj(self, obj, *v, **kw):
@@ -157,6 +157,15 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         # add client to record
         #
         assert isinstance(obj, welcome_action.VikitClientWelcomeAction)
+        assert kw.has_key('sender')
+        #
+        # record sender
+        #
+        self.regist_sender(obj.id, kw['sender'])
+        
+        #
+        # record ordinary
+        #
         if not self._dict_record_client.has_key(obj.id):
             self._dict_record_client[obj.id] = {}
         else:
@@ -172,13 +181,16 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         # verify obj
         #
         if self._dict_record_client.has_key(obj.id):
-            sender = self.get_sender(obj.id)
+            sender = self._dict_record_client.get(obj.id).get('sender')
             #
             # build service infos
             #
-            _rspssinfos = platform_actions.VikitResponseServiceListPlatform(
-                                                                           self._dict_service_infos)
-            sender.send(_rspssinfos)
+            if sender:
+                _rspssinfos = platform_actions.VikitResponseServiceListPlatform(
+                                                                               self._dict_service_infos)
+                sender.send(_rspssinfos)
+            else:
+                print('[platform] no such id')
         else:
             sender = kw['sender']
             sender.send(error_actions.VikitErrorAction(self.id, 'not registed client'))

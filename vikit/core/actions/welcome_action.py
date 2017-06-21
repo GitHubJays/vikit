@@ -10,7 +10,14 @@ from . import base
 from . import ackbase
 
 ########################################################################
-class VikitWelcomeAction(base.BaseAction, ackbase.Ackable):
+class VikitWelcomeBase(object):
+    """"""
+    pass
+    
+    
+
+########################################################################
+class VikitWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBase):
     """"""
 
     #----------------------------------------------------------------------
@@ -21,7 +28,7 @@ class VikitWelcomeAction(base.BaseAction, ackbase.Ackable):
         self.id = id
     
 ########################################################################
-class VikitClientWelcomeAction(base.BaseAction, ackbase.Ackable):
+class VikitClientWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBase):
     """"""
 
     #----------------------------------------------------------------------
