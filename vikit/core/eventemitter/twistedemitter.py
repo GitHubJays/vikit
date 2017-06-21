@@ -11,7 +11,7 @@ from twisted.internet import task, reactor
 from . import emitterbase
 from ..platform import vikitplatform
 from ..servicenode import vikitservicenode, vikitservice
-from ..vikitclient import vikitclient
+from ..vikitclient import vikitclient, vikitagentpool
 from ..launch.twistedlaunch import TwistdLauncher
 from ..launch import twistedbase
 from ..actions import servicenode_actions, heartbeat_action, task_action
@@ -232,10 +232,48 @@ class TwistedServiceEventEmitter(emitterbase.EmitterBase):
         
         self.service.regist_result_callback(callback)
         
+########################################################################
+class TwistdClientAgentPoolEmitter(emitterbase.EmitterBase):
+    """"""
+
     #----------------------------------------------------------------------
-    def _send_(self, ):
-        """"""
+    def __init__(self, connector, default_update_interval=10):
+        """Constructor"""
+        emitterbase.EmitterBase.__init__(self, connector)
         
+        self.agentpool = connector.entity
+        assert isinstance(self.agentpool, vikitagentpool.VikitClientAgentPool)
+        
+        #
+        # update services loopingcall setting
+        #
+        self._loopingcall_start_update_services = \
+            task.LoopingCall(self.agentpool.update_services_list)
+        
+        self._interval = default_update_interval
+        
+    
+    #----------------------------------------------------------------------
+    def get_service(self):
+        """"""
+        return self.agentpool.get_service()
+
+    #----------------------------------------------------------------------
+    def start_update_services(self, interval=None):
+        """"""
+        if self._loopingcall_start_update_services.running:
+            if interval == self._interval:
+                self._loopingcall_start_update_services.stop()
+                self._loopingcall_start_update_services.start(self._interval)
+        else:
+            if interval:
+                self._loopingcall_start_update_services.start(interval)
+            else:
+                self._loopingcall_start_update_services.start(self._interval)
+        
+        
+    
+    
         
     
     

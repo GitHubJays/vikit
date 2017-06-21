@@ -10,7 +10,8 @@ import time
 
 from ..basic import vikitbase
 from ..utils.singleton import Singleton
-from ..actions import welcome_action, heartbeat_action
+from ..actions import welcome_action, heartbeat_action, platform_actions
+from ..actions import error_actions
 from ..vikitdatas import vikitserviceinfo
 
 ########################################################################
@@ -40,6 +41,11 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     # record the sender
     # 
     _dict_record_sender = {}
+    
+    #
+    # record clients
+    #
+    _dict_record_client = {}
 
     #----------------------------------------------------------------------
     def __init__(self, id):
@@ -66,6 +72,20 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     def on_received_obj(self, obj, *args, **kw):
         """"""
         _from = kw.get('from_id')
+        
+        #
+        # process client 
+        #
+        if isinstance(obj, welcome_action.VikitClientWelcomeAction):
+            self.handle_client_welcome_obj(obj, *args, **kw)
+            return 
+        elif isinstance(obj, platform_actions.VikitRequestServiceListPlatform):
+            self.handle_request_service_list(obj, *args, **kw)
+            return
+        
+        #
+        # process service node
+        #
         if not _from in self._dict_record_sender:
             if isinstance(obj, welcome_action.VikitWelcomeAction):
                 self.handle_welcome_obj(obj, *args, **kw)
@@ -88,6 +108,9 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         if self._dict_service_node_recorder.has_key(_lost_id):
             del self._dict_service_node_recorder[_lost_id]
         
+        if self._dict_record_client.has_key(_lost_id):
+            del self._dict_record_client[_lost_id]
+        
         #
         # clean the service info
         #
@@ -109,7 +132,10 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     #----------------------------------------------------------------------
     def on_connection_made(self, *v, **kw):
         """"""
-        pass
+        #
+        # regist sender
+        #
+        self.regist_sender(kw['from_id'], kw['sender'])        
     
     #----------------------------------------------------------------------
     def handle_welcome_obj(self, obj, *v, **kw):
@@ -122,7 +148,40 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         #
         # regist sender
         #
-        self.regist_sender(obj.id, kw['sender'])
+        #self.regist_sender(obj.id, kw['sender'])
+    
+    #----------------------------------------------------------------------
+    def handle_client_welcome_obj(self, obj, *v, **kw):
+        """"""
+        #
+        # add client to record
+        #
+        assert isinstance(obj, welcome_action.VikitClientWelcomeAction)
+        if not self._dict_record_client.has_key(obj.id):
+            self._dict_record_client[obj.id] = {}
+        else:
+            pass
+        
+        self._dict_record_client[obj.id].update(kw)
+    
+    #----------------------------------------------------------------------
+    def handle_request_service_list(self, obj, *v, **kw):
+        """"""
+        assert isinstance(obj, platform_actions.VikitRequestServiceListPlatform)
+        #
+        # verify obj
+        #
+        if self._dict_record_client.has_key(obj.id):
+            sender = self.get_sender(obj.id)
+            #
+            # build service infos
+            #
+            _rspssinfos = platform_actions.VikitResponseServiceListPlatform(
+                                                                           self._dict_service_infos)
+            sender.send(_rspssinfos)
+        else:
+            sender = kw['sender']
+            sender.send(error_actions.VikitErrorAction(self.id, 'not registed client'))
     
     #----------------------------------------------------------------------
     def update_from_heartbeat(self, heartbeat_obj):

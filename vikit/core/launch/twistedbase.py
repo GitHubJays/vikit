@@ -160,7 +160,9 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def connectionMade(self):
         """"""
-        self.send(welcome_action.VikitWelcomeAction(self.entity.id))
+        if not self.entity.disable_default_connectionMade:
+            self.send(welcome_action.VikitWelcomeAction(self.entity.id))
+        
         self.entity.on_connection_made(self, from_id=self.id, sender=self)
         
         

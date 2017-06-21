@@ -13,6 +13,8 @@ class VikitBase(object):
     """"""
     
     __metaclass__ = ABCMeta
+    
+    disable_default_connectionMade = False
 
     @abstractmethod
     def on_received_obj(self):
