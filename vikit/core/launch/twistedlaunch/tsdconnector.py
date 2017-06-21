@@ -50,11 +50,13 @@ class TwistdConnector(ConnecterIf):
                                                     ack_timeout,
                                                     retry_times)
         
-        #_twistedconnect = reactor.connectTCP(target_host, target_port, factory, 
-                                            #connect_timeout)
-        client = ClientCreator(reactor, VikitTwistedProtocol,
-                               self.entity, cryptor, ack_timeout, retry_times)       
-        _twistedconnect = client.connectTCP(target_host, target_port, timeout=connect_timeout)
+        _twistedconnect = reactor.connectTCP(target_host, target_port, factory, 
+                                             connect_timeout)
+        
+        #client = ClientCreator(reactor, VikitTwistedProtocol,
+                               #self.entity, cryptor, ack_timeout, retry_times)       
+        #client.connectTCP(target_host, target_port, timeout=connect_timeout)
+        
         self.connector = _twistedconnect
         
         

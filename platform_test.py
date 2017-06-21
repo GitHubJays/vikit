@@ -23,10 +23,21 @@ emitter = twistedemitter.TwistedPlatformEventEmitter(l)
 #----------------------------------------------------------------------
 def _start_service():
     """"""
+
     emitter.start_service('test', '123', 'demo', {'port':7034,
                                                   'net_if':''})
     
+    time.sleep(3)
+    emitter.stop_service(service_id='123')
+    
     
 reactor.callLater(5, _start_service)
+
+#----------------------------------------------------------------------
+def _stop_platform():
+    """"""
+    print('[platform] shuting down')
+    emitter.shutdown()
+#reactor.callLater(13, _stop_platform)
 
 reactor.run()

@@ -69,7 +69,6 @@ class VikitClient(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *v, **kw):
         """"""
-        print('[~] client got : {}'.format(obj))
         if not self.get_sender():
             if isinstance(obj, welcome_action.VikitWelcomeAction):
                 self.handle_welcome_obj(obj, *v, **kw)
@@ -83,7 +82,6 @@ class VikitClient(vikitbase.VikitBase):
     def on_received_result(self, result_dict):
         """"""
         assert isinstance(result_dict, dict)
-        print('[~] client got result : {}'.format(result_dict))
         _r = result_dict
         for i in self._list_result_callback_chains:
             if i[1]:

@@ -38,6 +38,8 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         # private
         #
         self._callback_start_heartbeat = None
+        self._callback_stop_heartbeat = None
+        
         self._sender = None
     
     @property
@@ -102,6 +104,8 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
             self._dict_launcher[id] = {}
             self._dict_launcher[id]['launcher'] = _launcher
             self._dict_launcher[id]['module_name'] = module_name
+        
+        self._send_heartbeat()
 
     
     #----------------------------------------------------------------------
@@ -144,20 +148,59 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
             del self._dict_launcher[id]
         else:
             raise StandardError('shutdown a service not existed')
-        
+    
+    #
+    # start / stop heartbeat
+    #
     #----------------------------------------------------------------------
     def start_heartbeat(self, interval=10):
         """"""
         if self._callback_start_heartbeat:
             self._callback_start_heartbeat(interval)
         else:
-            raise NotImplementedError('not heartbeat setting, plz regist ' + \
-                                      'heartbeat callback first')
+            raise NotImplementedError('not heartbeat start setting, plz regist ' + \
+                                      'heartbeat start callback first')
+    
+    #----------------------------------------------------------------------
+    def stop_heartbeat(self):
+        """"""
+        if self._callback_stop_heartbeat:
+            self._callback_stop_heartbeat()
+        else:
+            raise NotImplementedError('not heartbeat stop setting, plz regist ' + 
+                                      'heartbeat stop callback first')
+        
     
     #----------------------------------------------------------------------
     def regist_start_heartbeat_callback(self, callback):
         """"""
+        assert callable(callback)
         self._callback_start_heartbeat = callback
+        
+    #----------------------------------------------------------------------
+    def regist_stop_heartbeat_callback(self, callback):
+        """"""
+        assert callable(callback)
+        self._callback_stop_heartbeat = callback
+    
+    #----------------------------------------------------------------------
+    def _send_heartbeat(self):
+        """"""
+        hbobj = self.get_heartbeat_obj()
+        
+        #
+        # get sender 
+        #
+        sender = self.get_sender()
+        
+        #
+        # send hearbeat
+        #
+        if sender:
+            sender.send(hbobj)
+        else:
+            raise RuntimeError('sender lost (connection lost)')
+        
     
     #
     # core callback
@@ -178,19 +221,37 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
         """"""
-        print('[!] service node connection lost')
+        print('[servicenode] service node connection lost')
+        #
+        # shutdown heartbeat
+        #
+        print('[servicenode] stop heartbeat')
+        self.stop_heartbeat()
+        
+        #
+        # shutdown all service
+        #
+        print('[servicenode] shutdown all services')
+        for i in self._dict_launcher.keys():
+            self.shutdown_service(i)
+            
+        #   
+        # shutdown 
+        #
+        
     
     #----------------------------------------------------------------------
     def on_connection_made(self, *v, **kw):
         """"""
         print('[!] service node connection made')
+        self.regist_sender(sender=kw.get('sender'))
     
     #----------------------------------------------------------------------
     def _on_welcomed_success(self, obj, **kw):
         """"""
         self.start_heartbeat(self.heartbeat_interval)
         
-        self.regist_sender(sender=kw.get('sender'))
+        
         
         
             

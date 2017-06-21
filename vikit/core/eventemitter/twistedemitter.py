@@ -6,7 +6,7 @@
   Created: 06/17/17
 """
 
-from twisted.internet import task
+from twisted.internet import task, reactor
 
 from . import emitterbase
 from ..platform import vikitplatform
@@ -58,6 +58,22 @@ class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
     def get_service_info(self):
         """"""
         return self.platform.get_service_info()
+    
+    #----------------------------------------------------------------------
+    def shutdown(self):
+        """"""
+        #
+        # shutdown socket
+        #
+        self.launcher.connector.stopListening()
+        
+        #
+        # shutdown reactor
+        #
+        reactor.stop()
+        
+        
+        #self.launcher.connector.shutdown()
 
 ########################################################################
 class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
@@ -72,6 +88,13 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
         assert isinstance(self.servicenode, vikitservicenode.VikitServiceNode) 
         
         self._loopingcall_heartbeat = task.LoopingCall(self._send_heartbeat)
+        
+        #
+        # auto regist
+        #
+        self._regist_start_heartbeat_callback()
+        self._regist_stop_heartbeat_callback()
+ 
     
     #----------------------------------------------------------------------
     def get_sender(self):
@@ -80,10 +103,15 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
         
     
     #----------------------------------------------------------------------
-    def regist_start_heartbeat_callback(self):
+    def _regist_start_heartbeat_callback(self):
         """"""
         self.servicenode.regist_start_heartbeat_callback(self._start_heartbeat)
-        #return 
+        return
+    
+    #----------------------------------------------------------------------
+    def _regist_stop_heartbeat_callback(self):
+        """"""
+        self.servicenode.regist_stop_heartbeat_callback(self._stop_heartbeat)
     
     #----------------------------------------------------------------------
     def _start_heartbeat(self, interval):
@@ -94,15 +122,30 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
         else:
             self._loopingcall_heartbeat.start(interval, True)
     
+        return 
+    
+    #----------------------------------------------------------------------
+    def _stop_heartbeat(self):
+        """"""
+        if self._loopingcall_heartbeat.running:
+            self._loopingcall_heartbeat.stop()
+            
+        return
+        
+    
     #----------------------------------------------------------------------
     def _send_heartbeat(self):
         """"""
-        _heartbeat = self.servicenode.get_heartbeat_obj()
-        _connector = self.get_sender()
-        #print(_connector)
-        assert isinstance(_connector, twistedbase.VikitTwistedProtocol)
-        #print(_heartbeat)
-        _connector.send(_heartbeat)
+        #print('[>>>>>>>>>>>>>>>>] hb')
+        self.servicenode._send_heartbeat()
+    
+    #----------------------------------------------------------------------
+    def shutdown(self):
+        """"""
+        self.launcher.connector.disconnect()
+        #self.launcher.connector.stop()
+        reactor.stop()
+        
 
 ########################################################################
 class TwistedClientEventEmitter(emitterbase.EmitterBase):

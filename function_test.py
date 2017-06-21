@@ -32,7 +32,6 @@ node = vikitservicenode.VikitServiceNode('2')
 connector = TwistdConnector(node)
 connector.connect('127.0.0.1', 7077)
 nodemitter = twistedemitter.TwistedServiceNodeEventEmitter(connector)
-nodemitter.regist_start_heartbeat_callback()
 print('[+] START ServiceNode Success')
 
 

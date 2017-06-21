@@ -54,7 +54,7 @@ class VikitTwistedProtocol(Protocol):
         #
         # pick for stream
         #
-        print('got data: {}'.format(data))
+        #print('got data: {}'.format(data))
         state = 'pending'
         for i in data:
             #print i
@@ -161,7 +161,7 @@ class VikitTwistedProtocol(Protocol):
     def connectionMade(self):
         """"""
         self.send(welcome_action.VikitWelcomeAction(self.entity.id))
-        self.entity.on_connection_made(self)
+        self.entity.on_connection_made(self, from_id=self.id, sender=self)
         
         
 ########################################################################

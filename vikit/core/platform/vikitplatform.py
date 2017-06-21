@@ -17,9 +17,28 @@ from ..vikitdatas import vikitserviceinfo
 class VikitPlatform(vikitbase.VikitBase, Singleton):
     """"""
     
+    #
+    # regist service node and record some information about it
+    #    1. sender: the feedback channel for the entity (id)
+    #
     _dict_service_node_recorder = {}
+    
+    #
+    # paltform id (self)
+    #
     _id = ''
+    
+    #
+    # all service infos
+    #    1. update_timestamp
+    #    2. service_node_id
+    #    3. service_info -> service info object
+    #
     _dict_service_infos = {}
+    
+    #
+    # record the sender
+    # 
     _dict_record_sender = {}
 
     #----------------------------------------------------------------------
@@ -59,7 +78,33 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
         """"""
-        pass
+        _lost_id = kw.get('from_id')
+        
+        print('[platform] lost connection id: {}'.format(_lost_id))
+        
+        if self._dict_record_sender.has_key(_lost_id):
+            del self._dict_record_sender[_lost_id]
+            
+        if self._dict_service_node_recorder.has_key(_lost_id):
+            del self._dict_service_node_recorder[_lost_id]
+        
+        #
+        # clean the service info
+        #
+        def pick_service_id(id):
+            if _lost_id == self._dict_service_infos[id]['service_node_id']:
+                return True
+            else:
+                return False
+        
+        ids = filter(pick_service_id, self._dict_service_infos.keys())
+        
+        for i in ids:
+            if self._dict_service_infos.has_key(i):
+                del self._dict_service_infos[i]
+        
+        print('[platform] resource for id:{} has been cleaned'.format(_lost_id))
+        
     
     #----------------------------------------------------------------------
     def on_connection_made(self, *v, **kw):
@@ -130,6 +175,11 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
             # update timestamp
             #
             self._dict_service_infos[service_info_obj.id]['update_timestamp'] = time.time()
+            
+            #
+            # update owner
+            #
+            self._dict_service_infos[service_info_obj.id]['service_node_id'] = service_info_obj.service_node_id
             
             #
             # update service info data
