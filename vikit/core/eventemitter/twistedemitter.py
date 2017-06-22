@@ -122,12 +122,6 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
         #
         self._regist_start_heartbeat_callback()
         self._regist_stop_heartbeat_callback()
- 
-    
-    #----------------------------------------------------------------------
-    def get_sender(self):
-        """"""
-        return self.launcher.connector.result
         
     
     #----------------------------------------------------------------------
@@ -189,12 +183,8 @@ class TwistedClientEventEmitter(emitterbase.EmitterBase):
         assert isinstance(self.client, vikitclient.VikitClient)
         
         self.client.regist_execute_callback(self._send_executeaction)
-        
     
-    #----------------------------------------------------------------------
-    def get_sender(self):
-        """"""
-        return self._conn   
+
     
     #----------------------------------------------------------------------
     def execute(self, task_id, params):
@@ -211,7 +201,7 @@ class TwistedClientEventEmitter(emitterbase.EmitterBase):
         #
         taskaction = task_action.VikitExecuteTaskAction(task_id, params)
         
-        conn = self.client.get_sender()
+        conn = self.client.get_sender(self.client.service_id)
         conn.send(taskaction)
         
         return task_id, params

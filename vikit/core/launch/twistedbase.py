@@ -15,6 +15,12 @@ from ..actions import welcome_action
 SPLITE_CHARS = '$'
 START_CHAR = '#'
 
+#
+# state defination
+#
+state_PENDING = 'pending'
+state_WORKING = 'working'
+
 ########################################################################
 class VikitTwistedProtocol(Protocol):
     """"""
@@ -44,6 +50,11 @@ class VikitTwistedProtocol(Protocol):
         
         self._buff = ''
         self._buff_datas = []
+        
+        #
+        # set state
+        #
+        self._state = state_PENDING
 
     #
     # data proccess
@@ -51,6 +62,12 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def dataReceived(self, data):
         """"""
+        def _process_obj(i):
+            
+            obj = self.serializer.unserialize(i)
+            #reactor.callInThread(self.objReceived, obj)
+            self.objReceived(obj)
+            
         #
         # pick for stream
         #
@@ -74,20 +91,13 @@ class VikitTwistedProtocol(Protocol):
                 self._buff = self._buff + i
             
             if state == 'close':
-                self._buff_datas.append(self._buff)
+                #self._buff_datas.append(self._buff)
+                _process_obj(self._buff)
                 self._buff = ''
                 state = 'pending'
         
-        while True:
-            i = self._buff_datas.pop()
-            obj = self.serializer.unserialize(i)
-            #reactor.callInThread(self.objReceived, obj)
-            self.objReceived(obj)
 
-            if self._buff_datas:
-                pass
-            else:
-                break
+
 
     #----------------------------------------------------------------------
     def objReceived(self, obj):
@@ -121,9 +131,20 @@ class VikitTwistedProtocol(Protocol):
     def handle_obj(self, obj):
         """"""
         #print('[twisted] handle obj: {}'.format(obj))
-        if isinstance(obj, welcome_action.VikitWelcomeBase):
-            self.id = obj.id
-            self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
+        if self._state == state_PENDING:
+            
+            if isinstance(obj, welcome_action.VikitWelcomeBase):
+                self.id = obj.id
+                self.entity.regist_sender(id=self.id, sender=self)
+                self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
+                
+                #
+                # change state
+                #
+                self._state = state_WORKING
+            else:
+                pass
+                
         else:
             self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
 

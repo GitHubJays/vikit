@@ -25,7 +25,7 @@ state_PENDING = 'pending'
 class VikitServiceNode(vikitbase.VikitBase, Singleton):
     """"""
     
-    
+    platform_id = None
 
     #----------------------------------------------------------------------
     def __init__(self, id, heartbeat_interval=10):
@@ -47,8 +47,6 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         self._callback_start_heartbeat = None
         self._callback_stop_heartbeat = None
         
-        self._sender = None
-        
         #
         # state flag
         #
@@ -59,15 +57,6 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         """"""
         return self._id
     
-    #----------------------------------------------------------------------
-    def get_sender(self):
-        """"""
-        return self._sender
-    
-    #----------------------------------------------------------------------
-    def regist_sender(self, sender):
-        """"""
-        self._sender = sender
     
     @property
     def heartbeat_interval(self):
@@ -203,7 +192,7 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         #
         # get sender 
         #
-        sender = self.get_sender()
+        sender = self.get_sender(self.platform_id)
         
         #
         # send hearbeat
@@ -211,7 +200,7 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         if sender:
             sender.send(hbobj)
         else:
-            raise RuntimeError('sender lost (connection lost)')
+            print('sender lost (connection lost)')
         
     
     #
@@ -262,11 +251,15 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
     def on_connection_made(self, *v, **kw):
         """"""
         print('[!] service node connection made')
-        self.regist_sender(sender=kw.get('sender'))
     
     #----------------------------------------------------------------------
     def _on_welcomed_success(self, obj, **kw):
         """"""
+        #
+        # set platform_id
+        #
+        self.platform_id = obj.id
+        
         self.start_heartbeat(self.heartbeat_interval)
         self._state = state_WORK
         

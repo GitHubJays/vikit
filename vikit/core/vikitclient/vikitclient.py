@@ -18,7 +18,7 @@ class VikitClient(vikitbase.VikitBase):
         """Constructor"""
         
         self._id = id
-        self._sender = None
+        self.service_id = None
         
         #
         # callback chains
@@ -30,16 +30,6 @@ class VikitClient(vikitbase.VikitBase):
     def id(self):
         """"""
         return self._id
-    
-    #----------------------------------------------------------------------
-    def get_sender(self):
-        """"""
-        return self._sender
-    
-    #----------------------------------------------------------------------
-    def regist_sender(self, sender):
-        """"""
-        self._sender = sender
         
         
     #
@@ -69,7 +59,7 @@ class VikitClient(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *v, **kw):
         """"""
-        if not self.get_sender():
+        if not self.get_sender(self.service_id):
             if isinstance(obj, welcome_action.VikitWelcomeAction):
                 self.handle_welcome_obj(obj, *v, **kw)
             else:
@@ -107,7 +97,7 @@ class VikitClient(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def handle_welcome_obj(self, obj, *v, **kw):
         """"""
-        self.regist_sender(kw.get('sender'))
+        self.service_id = obj.id
     
     #----------------------------------------------------------------------
     def handle_result_response_obj(self, obj, *v, **kw):

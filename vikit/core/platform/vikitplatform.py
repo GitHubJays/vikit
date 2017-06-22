@@ -38,11 +38,6 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     _dict_service_infos = {}
     
     #
-    # record the sender
-    # 
-    _dict_record_sender = {}
-    
-    #
     # record clients
     #
     _dict_record_client = {}
@@ -56,16 +51,6 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     def id(self):
         """"""
         return self._id
-    
-    #----------------------------------------------------------------------
-    def get_sender(self, id):
-        """"""
-        return self._dict_service_node_recorder.get(id, {}).get('sender')
-    
-    #----------------------------------------------------------------------
-    def regist_sender(self, id, sender):
-        """"""
-        self._dict_record_sender[id] = sender
         
     
     #----------------------------------------------------------------------
@@ -86,7 +71,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         #
         # process service node
         #
-        if not _from in self._dict_record_sender:
+        if not _from in self._dict_service_node_recorder:
             if isinstance(obj, welcome_action.VikitWelcomeAction):
                 self.handle_welcome_obj(obj, *args, **kw)
         else:
@@ -148,7 +133,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         #
         # regist sender
         #
-        self.regist_sender(obj.id, kw['sender'])
+        #self.regist_sender(obj.id, kw['sender'])
     
     #----------------------------------------------------------------------
     def handle_client_welcome_obj(self, obj, *v, **kw):
@@ -161,7 +146,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         #
         # record sender
         #
-        self.regist_sender(obj.id, kw['sender'])
+        #self.regist_sender(obj.id, kw['sender'])
         
         #
         # record ordinary

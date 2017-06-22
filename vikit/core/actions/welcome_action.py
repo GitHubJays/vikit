@@ -26,6 +26,11 @@ class VikitWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBase):
         ackbase.Ackable.__init__(self)
         
         self.id = id
+        
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<WelcomeAction from:{}>'.format(self.id)
     
 ########################################################################
 class VikitClientWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBase):
@@ -37,6 +42,11 @@ class VikitClientWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBas
         ackbase.Ackable.__init__(self)
         
         self.id = id
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<ClientWelcomeAction from:{}>'.format(self.id)
         
         
     

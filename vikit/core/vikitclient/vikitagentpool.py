@@ -20,8 +20,6 @@ state_PENDING = 'pending'
 class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     """"""
     
-    _sender = None
-    
     # 
     # if disable_default_connectionMade is True, the default \ 
     #    connectionMade (send WelcomeAction) is disable
@@ -32,6 +30,11 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     # record servcies
     #
     _dict_service_infos = {}
+    
+    #
+    # id
+    #
+    platform_id = None
 
     #----------------------------------------------------------------------
     def __init__(self, id='vikitclientagentpool'):
@@ -56,7 +59,7 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     #----------------------------------------------------------------------
     def update_services_list(self):
         """"""
-        _sender = self.get_sender()
+        _sender = self.get_sender(self.platform_id)
         
         #
         # build request service infos
@@ -78,9 +81,8 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         """"""
         _sender = kw.get('sender')
         assert _sender is not None
-        self.regist_sender(_sender)
         
-        _fdsd = self.get_sender()
+        _fdsd = self.get_sender(self.platform_id)
         _fdsd.send(welcome_action.VikitClientWelcomeAction(self.id))
     
     #----------------------------------------------------------------------
@@ -102,7 +104,7 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         #
         # handle obj
         #
-        pass
+        self.platform_id = obj.id
         
         #
         # set state
@@ -122,22 +124,3 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         self._dict_service_infos.clear()
         self._dict_service_infos.update(_dict_services)
             
-    #
-    # get / regist sender
-    #
-    #----------------------------------------------------------------------
-    def get_sender(self):
-        """"""
-        return self._sender
-    
-    #----------------------------------------------------------------------
-    def regist_sender(self, sender):
-        """"""
-        print('[agent_pool] sender registed')
-        self._sender = sender
-        
-    
-        
-        
-    
-    

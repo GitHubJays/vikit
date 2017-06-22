@@ -112,7 +112,7 @@ class VikitService(vikitbase.VikitBase):
         self._dict_task_state = {}
         self._dict_task_from_client_id = {}
         self._dict_client_record = {}
-        self._dict_sender_record = {}
+        self._dict_sender_record = dict()
         
         #
         # result callback chains
@@ -240,10 +240,7 @@ class VikitService(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def on_connection_made(self, *v, **kw):
         """"""
-        #
-        # record sender
-        #
-        self.regist_sender(kw.get('from_id'), kw.get('sender'))
+        pass
     
     #----------------------------------------------------------------------
     def handle_welcome_obj(self, obj, **kw):
@@ -254,12 +251,7 @@ class VikitService(vikitbase.VikitBase):
         if not self._dict_client_record.has_key(obj.id):
             self._dict_client_record[obj.id] = {}
 
-        self._dict_client_record[obj.id].update(kw)
-        
-        #
-        # record sender
-        #
-        self.regist_sender(kw.get('from_id'), kw.get('sender'))        
+        self._dict_client_record[obj.id].update(kw)       
         
 
     
@@ -307,18 +299,5 @@ class VikitService(vikitbase.VikitBase):
         return _ret.get_dict()
     
     
-    #----------------------------------------------------------------------
-    def get_sender(self, id):
-        """"""
-        return self._dict_sender_record.get(id)
-    
-    #----------------------------------------------------------------------
-    def regist_sender(self, id, sender):
-        """"""
-        self._dict_sender_record[id] = sender
-        
-    
-        
-        
     
     

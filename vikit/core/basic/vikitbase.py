@@ -6,6 +6,7 @@
   Created: 06/17/17
 """
 
+import time
 from abc import ABCMeta, abstractmethod
 
 ########################################################################
@@ -15,6 +16,8 @@ class VikitBase(object):
     __metaclass__ = ABCMeta
     
     disable_default_connectionMade = False
+    
+    _dict_record_sender = {}
 
     @abstractmethod
     def on_received_obj(self):
@@ -31,13 +34,16 @@ class VikitBase(object):
         """"""
         pass
     
-    @abstractmethod
-    def get_sender(self, id=None):
+    #@abstractmethod
+    def get_sender(self, id, default=None):
         """"""
-        pass
+        return self._dict_record_sender.get(id, default)
     
-    @abstractmethod
+    #@abstractmethod
     def regist_sender(self, sender, id=None):
         """"""
-        pass
+        if self._dict_record_sender.has_key(id):
+            pass
+        else:
+            self._dict_record_sender[id] = sender
         
