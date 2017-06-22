@@ -19,6 +19,9 @@ class VikitBase(object):
     
     _dict_record_sender = {}
 
+    #
+    # result callback
+    #
     @abstractmethod
     def on_received_obj(self):
         """"""
@@ -34,9 +37,16 @@ class VikitBase(object):
         """"""
         pass
     
+    #
+    # sender
+    #
     #@abstractmethod
-    def get_sender(self, id, default=None):
+    def get_sender(self, id, default=None, timeout=10):
         """"""
+        end = time.time() + timeout
+        while (not self.connected) and end > time.time() :
+            pass
+        
         return self._dict_record_sender.get(id, default)
     
     #@abstractmethod
@@ -46,4 +56,22 @@ class VikitBase(object):
             pass
         else:
             self._dict_record_sender[id] = sender
+            
+    #
+    # connected?
+    #
+    @property
+    def connected(self):
+        """"""
+        if hasattr(self, '_connected'):
+            pass
+        else:
+            setattr(self, '_connected', False)
+        
+        return getattr(self, '_connected')
+    
+    @connected.setter
+    def connected(self, value):
+        """"""
+        self._connected = value
         

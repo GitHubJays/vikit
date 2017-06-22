@@ -136,6 +136,7 @@ class VikitTwistedProtocol(Protocol):
             if isinstance(obj, welcome_action.VikitWelcomeBase):
                 self.id = obj.id
                 self.entity.regist_sender(id=self.id, sender=self)
+                self.entity.connected = True
                 self.entity.on_received_obj(obj, twisted_conn=self, from_id=self.id, sender=self)
                 
                 #

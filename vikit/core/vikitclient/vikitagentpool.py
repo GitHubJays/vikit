@@ -9,6 +9,8 @@
 from ..actions import welcome_action, servicenode_actions, platform_actions
 from ..basic import vikitbase
 from ..utils import singleton
+from ..vikitdatas import vikitserviceinfo, vikitservicedesc, vikitservicelauncherinfo
+#from . import vikitagent
 
 #
 # states defines
@@ -27,9 +29,10 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     disable_default_connectionMade = True
     
     #
-    # record servcies
+    # record servcies/agents
     #
     _dict_service_infos = {}
+    _dict_agents = {}
     
     #
     # id
@@ -37,11 +40,20 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     platform_id = None
 
     #----------------------------------------------------------------------
-    def __init__(self, id='vikitclientagentpool'):
+    def __init__(self, id='vikitclientagentpool', cryptor=None, ack_timeout=10,
+                 retry_times=5, connect_timeout=30):
         """Constructor"""
         self._id = id
         
         self._state = state_PENDING
+        
+        #
+        # basic agent attrs
+        #
+        self._cryptor = cryptor
+        self._ack_timeout = ack_timeout
+        self._retry_times = retry_times
+        self._connect_timeout = connect_timeout
         
     @property
     def id(self):
@@ -68,6 +80,8 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         
         _sender.send(_rsinfos)
     
+    
+    
     #
     # system callback
     # 
@@ -82,7 +96,7 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         _sender = kw.get('sender')
         assert _sender is not None
         
-        _fdsd = self.get_sender(self.platform_id)
+        _fdsd = _sender 
         _fdsd.send(welcome_action.VikitClientWelcomeAction(self.id))
     
     #----------------------------------------------------------------------
@@ -123,4 +137,39 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         #
         self._dict_service_infos.clear()
         self._dict_service_infos.update(_dict_services)
+        
+        ##
+        ## update agent from services
+        ##
+        #for i in self._dict_service_infos.iteritems():
+            
+            ##
+            ## retrieve info
+            ##
+            #_sid, _infos = i
+            #_snid = _infos.get('service_node_id')
+            #_update_time = _infos.get('update_timestamp')
+            #_info_obj = _infos.get('service_info')
+            
+            #assert isinstance(_info_obj, vikitserviceinfo.VikitServiceInfo)
+            #_info_desc = _info_obj.desc
+            #assert isinstance(_info_desc, vikitservicedesc.VikitServiceDesc)
+            
+            ##
+            ## update agent
+            ##
+            #module_name = _info_desc.mod_info.get('module_name')
+            #if not self._dict_agents.has_key(module_name):
+                #_agent = vikitagent.VikitAgent(module_name, self._ack_timeout,
+                                               #self._retry_times, self._cryptor,
+                                               #self._connect_timeout)
+                
+                #self._dict_agents[module_name] = {'agent':_agent}
+            
+            #_agent_infos = self._dict_agents.get(module_name)
+            #_agent_infos['update_timestamp'] = _update_time
+            #_agent = _agent_infos.get('agent')
+            
+            #raise NotImplementedError()
+            
             

@@ -10,8 +10,8 @@ import random
 
 from . import vikitclient
 from ..launch.twistedlaunch import TwistdConnector
-from ..eventemitter import twistedemitter
 from ..utils import getuuid
+from ..eventemitter import twistedemitter
 
 ########################################################################
 class VikitAgent(object):

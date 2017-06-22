@@ -262,7 +262,11 @@ class TwistdClientAgentPoolEmitter(emitterbase.EmitterBase):
                 self._loopingcall_start_update_services.start(self._interval)
         
         
-    
+    #----------------------------------------------------------------------
+    def execute(self, module_name, task_id, params, service_id=None):
+        """"""
+        return self.agentpool.execute(module_name, task_id, params, service_id)
+        
     
         
     
