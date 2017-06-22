@@ -1,6 +1,6 @@
 框架部分：
-1. 客户端代理池与客户端代理的更新。
-2. 优化 regist_sender 的调用（从协议层面注册 regist_sender / 从 get_sender 处添加一个状态锁：如果无法正确获得 sender 则无法 get_sender 而不是返回一个 None）。
+Doing: 1. 客户端代理池与客户端代理的更新。
+Finished: 2. 优化 regist_sender 的调用（从协议层面注册 regist_sender / 从 get_sender 处添加一个状态锁：如果无法正确获得 sender 则无法 get_sender 而不是返回一个 None）。
 3. 封装 Platform/ServiceNode/VikitClient 在与 core 平级的 apps（未创建）中。
 4. VikitClient 服务化
 5. 针对 VikitClient 做结果存储的数据库支持
