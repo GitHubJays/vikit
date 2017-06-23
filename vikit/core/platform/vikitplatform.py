@@ -41,6 +41,12 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     # record clients
     #
     _dict_record_client = {}
+    
+    #
+    # callback chains
+    #
+    _callback_chain_on_service_node_connected = []
+    _callback_chain_on_error_action_happend = []
 
     #----------------------------------------------------------------------
     def __init__(self, id):
@@ -52,7 +58,10 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         """"""
         return self._id
         
-    
+    #----------------------------------------------------------------------
+    def on_error_happend(self, *v, **kw):
+        """"""
+        
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *args, **kw):
         """"""
@@ -205,6 +214,22 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
             self._dict_service_node_recorder[service_node_id] = {}
         
         self._dict_service_node_recorder[service_node_id].update(record)
+        
+        for i in self._callback_chain_on_service_node_connected:
+            i(service_node_id)
+    
+    #----------------------------------------------------------------------
+    def regist_on_service_node_connected(self, callback):
+        """"""
+        assert callable(callback)
+        self._callback_chain_on_service_node_connected.append(callback)
+    
+    #----------------------------------------------------------------------
+    def regist_on_error_action_happend(self, callback):
+        """"""
+        assert callable(callback)
+        self._callback_chain_on_error_action_happend.append(callback)
+        
     
     #----------------------------------------------------------------------
     def update_health_info(self, service_node_id, health_info_obj):

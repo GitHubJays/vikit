@@ -9,6 +9,7 @@
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
+from ..basic import vikitbase
 from . import ackpool, serializer, crypto
 from ..actions import welcome_action
 
@@ -30,6 +31,7 @@ class VikitTwistedProtocol(Protocol):
                  ack_timeout=10, retry_times=5):
         """"""
         self.ack_pool = ackpool.ACKPool()
+        
         self.serializer = serializer.Serializer(cryptor)
         
         #
@@ -42,6 +44,7 @@ class VikitTwistedProtocol(Protocol):
         # vikit entity
         #
         self.entity = vikit_entity
+        assert isinstance(self.entity, vikitbase.VikitBase)
         
         #
         # set id
@@ -55,6 +58,11 @@ class VikitTwistedProtocol(Protocol):
         # set state
         #
         self._state = state_PENDING
+        
+        #
+        # init
+        #
+        self.ack_pool.regist_timeout_callback(self.entity.on_error_happend)
 
     #
     # data proccess
@@ -173,6 +181,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def connectionLost(self, reason):
         """"""
+        self.connected = False
         self.entity.on_connection_lost(self, reason, from_id=self.id)
     
     #----------------------------------------------------------------------

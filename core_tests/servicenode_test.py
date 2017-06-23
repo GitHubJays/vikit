@@ -6,6 +6,9 @@
   Created: 06/19/17
 """
 
+import sys
+
+sys.path.append('..')
 from twisted.internet import reactor
 
 from vikit.core.servicenode import vikitservicenode

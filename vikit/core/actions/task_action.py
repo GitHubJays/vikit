@@ -54,6 +54,51 @@ class VikitResponseResultAction(base.BaseAction, ackbase.Ackable):
         """"""
         return '<TaskResult task_id:{} result:{}>'.format(self.id,
                                                           self.result)
+
+########################################################################
+class VikitRequestTaskStatus(base.BaseAction, ackbase.Ackable):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, task_id):
+        """Constructor"""
+        ackbase.Ackable.__init__(self)
+        self.task_id
+        
+    @property
+    def id(self):
+        """"""
+        return self.task_id
+    
+########################################################################
+class VikitResponseTaskStatus(base.BaseAction, ackbase.Ackable):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, task_id, status):
+        """Constructor"""
+        ackbase.Ackable.__init__(self)
+        
+        self.task_id = task_id
+        self.status = status
+    
+    @property
+    def id(self):
+        """"""
+        return self.task_id
+    
+    @property
+    def status(self):
+        """"""
+        return self.status
+        
+        
+    
+    
+        
+        
+    
+    
     
     
         

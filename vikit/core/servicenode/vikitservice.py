@@ -170,24 +170,24 @@ class VikitService(vikitbase.VikitBase):
         """"""
         #assert isinstance(result_dict, dict)
         
-        print('[*] got result success!')
+        #print('[*] got result success!')
         _tid = result_dict.get('task_id')
         
         
         _from = self._dict_task_from_client_id.get(_tid)
-        print('[*] got task source! ')
+        #print('[*] got task source! ')
         
         _sender = self.get_sender(_from)
-        print('[*] got task source sender')
+        #print('[*] got task source sender')
         
         #
         # build ResponseResultAction
         #
         rspresultaction = task_action.VikitResponseResultAction(result_dict)
-        print('[*] build')
+        #print('[*] build')
         
         _sender.send(rspresultaction)
-        print('[*] send result back successfully')
+        #print('[*] send result back successfully')
         
     #
     # core callback functions
@@ -229,6 +229,10 @@ class VikitService(vikitbase.VikitBase):
         else:
             if isinstance(obj, task_action.VikitExecuteTaskAction):
                 self.handle_executetaskaction_obj(obj, from_id)
+                
+            if isinstance(obj, task_action.VikitRequestTaskStatus):
+                self.handle_request_task_status(obj)
+                
             else:
                 print('[!] Sorry No Handler For This Request')
     
@@ -270,6 +274,15 @@ class VikitService(vikitbase.VikitBase):
         # record params
         #
         self.execute_task(obj.id, obj.params)
+        
+        return
+    
+    #----------------------------------------------------------------------
+    def handle_request_task_status(self, obj, *v, **kw):
+        """"""
+        assert isinstance(obj, task_action.VikitRequestTaskStatus)
+        
+        _task_id = obj.id
         
         
     

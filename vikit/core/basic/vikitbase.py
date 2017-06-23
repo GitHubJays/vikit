@@ -37,6 +37,10 @@ class VikitBase(object):
         """"""
         pass
     
+    def on_error_happend(self):
+        """"""
+        pass
+    
     #
     # sender
     #

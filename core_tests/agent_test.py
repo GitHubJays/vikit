@@ -5,7 +5,9 @@
   Purpose: Client Agent
   Created: 06/20/17
 """
+import sys
 
+sys.path.append('..')
 from twisted.internet import reactor
 
 from vikit.core.vikitclient import vikitagent

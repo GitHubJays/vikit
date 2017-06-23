@@ -10,7 +10,7 @@ from . import base
 from . import ackbase
 
 ########################################################################
-class VikitErrorAction(base.BaseAction, ackbase.Ackable):
+class VikitErrorAction(base.ErrorAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------

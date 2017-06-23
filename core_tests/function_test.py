@@ -7,7 +7,9 @@
 """
 
 import time
+import sys
 
+sys.path.append('..')
 from twisted.internet import reactor
 
 from vikit.core.platform import vikitplatform

@@ -31,6 +31,7 @@ class _TaskAckable(object):
         # priv
         #
         self._count = 0
+        self._callback_timeout = None
 
     #----------------------------------------------------------------------
     def waiting_ack(self):
@@ -44,6 +45,8 @@ class _TaskAckable(object):
         self._count = self._count + 1
         if self._count > self._retry_times:
             self.stop()
+            if self._callback_timeout:
+                self._callback_timeout(*self._vargs, **self._kwargs)
         else:
             self._fun(*self._vargs, **self._kwargs)
 
@@ -64,6 +67,12 @@ class _TaskAckable(object):
     def finished(self):
         """"""
         return self._lpc.running
+    
+    #----------------------------------------------------------------------
+    def regist_timeout_callback(self, callback):
+        """"""
+        assert callable(callback)
+        self._callback_timeout = callback
 
 
 
@@ -77,12 +86,19 @@ class ACKPool(object):
     def __init__(self):
         """Constructor"""
         self._pool = {}
+        
+        self._callback_timeout_func = None
 
     #----------------------------------------------------------------------
     def add(self, id, target_func, vargs=tuple(), kwargs={}, ack_timeout=10, retry_items=5):
         """"""
+        #
+        # build taskackable
+        #
         ret = _TaskAckable(id, target_func, vargs, kwargs,
-                           interval=ack_timeout, retry_times=retry_items)    
+                           interval=ack_timeout, retry_times=retry_items) 
+        ret.regist_timeout_callback(self._callback_timeout_func)
+        
         self._pool[id] = ret
 
         ret.waiting_ack()
@@ -93,5 +109,12 @@ class ACKPool(object):
         _r = self._pool.get(id)
         if _r:
             _r.ack()
+            del self._pool[id]
         else:
             raise ACKError('not such id:{} in ackpool'.format(id))
+        
+    #----------------------------------------------------------------------
+    def regist_timeout_callback(self, callback):
+        """"""
+        assert callable(callback)
+        self._callback_timeout_func = callback

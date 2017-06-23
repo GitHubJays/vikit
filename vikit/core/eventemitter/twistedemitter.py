@@ -102,6 +102,20 @@ class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
         
         
         #self.launcher.connector.shutdown()
+    
+    #----------------------------------------------------------------------
+    def regist_on_service_node_connected(self, callback):
+        """"""
+        assert callable(callback)
+        
+        self.platform.regist_on_service_node_connected(callback)
+    
+    #----------------------------------------------------------------------
+    def regist_on_error_action_happend(self, callback):
+        """"""
+        assert callable(callback)
+        
+        self.platform.regist_on_error_action_happend(callback)
 
 ########################################################################
 class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
