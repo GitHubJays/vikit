@@ -41,6 +41,10 @@ class VikitBase(object):
         """"""
         pass
     
+    def on_received_success_action(self):
+        """"""
+        pass
+    
     #
     # sender
     #

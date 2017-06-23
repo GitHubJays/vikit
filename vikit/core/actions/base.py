@@ -14,10 +14,7 @@ class BaseAction(object):
 class ErrorAction(BaseAction):
     """"""
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
-        
-        
-    
-    
+########################################################################
+class SuccessAction(BaseAction):
+    """"""
+

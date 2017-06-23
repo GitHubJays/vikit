@@ -24,6 +24,37 @@ class PlatformConfig(object):
     def net_if(self):
         """"""
         return self.net_interface
+
+########################################################################
+class ServiceNodeConfig(object):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, platform_host, platform_port, heartbeat_interval=10,
+                 ack_timeout=10, retry_times=5, connect_timeout=30,
+                 cryptor=None):
+        """Constructor"""
+        self.platform_host = platform_host
+        self.platform_port = platform_port
+        
+        self.heartbeat_interval = heartbeat_interval
+        self.cryptor = cryptor
+        self.ack_timeout = ack_timeout
+        self.retry_times = retry_times
+        self.connect_timeout = connect_timeout
+        
+    @property
+    def target_host(self):
+        """"""
+        return self.platform_host
+    
+    @property
+    def target_port(self):
+        """"""
+        return self.platform_port
+        
+    
+    
         
         
     

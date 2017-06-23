@@ -116,6 +116,14 @@ class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
         assert callable(callback)
         
         self.platform.regist_on_error_action_happend(callback)
+    
+    #----------------------------------------------------------------------
+    def regist_on_received_success_action(self, callback):
+        """"""
+        assert callable(callback)
+        
+        self.platform.regist_on_received_success_action(callback)
+        
 
 ########################################################################
 class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):

@@ -61,7 +61,7 @@ class StartServiceErrorAction(base.ErrorAction, ackbase.Ackable):
                                                                               self.launcher_config)
 
 ########################################################################
-class StartServiceSuccessAction(base.BaseAction, ackbase.Ackable):
+class StartServiceSuccessAction(base.SuccessAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------
@@ -132,7 +132,7 @@ class StopServiceErrorAction(base.ErrorAction, ackbase.Ackable):
         return '<StopServiceError service_id:{}>'.format(self.service_id)
     
 ########################################################################
-class StopServiceSuccessAction(base.BaseAction, ackbase.Ackable):
+class StopServiceSuccessAction(base.SuccessAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------

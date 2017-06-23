@@ -11,7 +11,7 @@ import time
 from ..basic import vikitbase
 from ..utils.singleton import Singleton
 from ..actions import welcome_action, heartbeat_action, platform_actions
-from ..actions import error_actions
+from ..actions import error_actions, base
 from ..vikitdatas import vikitserviceinfo
 
 ########################################################################
@@ -47,6 +47,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     #
     _callback_chain_on_service_node_connected = []
     _callback_chain_on_error_action_happend = []
+    _callback_chain_on_received_success_action = []
 
     #----------------------------------------------------------------------
     def __init__(self, id):
@@ -61,6 +62,14 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     #----------------------------------------------------------------------
     def on_error_happend(self, *v, **kw):
         """"""
+        for i in self._callback_chain_on_error_action_happend:
+            i(*v, **kw)
+        
+    #----------------------------------------------------------------------
+    def on_received_success_action(self, obj, *v, **kw):
+        """"""
+        for i in self._callback_chain_on_received_success_action:
+            i(obj)
         
     #----------------------------------------------------------------------
     def on_received_obj(self, obj, *args, **kw):
@@ -86,6 +95,8 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         else:
             if isinstance(obj, heartbeat_action.HeartBeatAction):
                 self.update_from_heartbeat(obj)
+            elif isinstance(obj, base.SuccessAction):
+                self.on_received_success_action(obj)
             else:
                 print('[platform] No handler for {}'.format(obj))
     
@@ -229,6 +240,13 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         """"""
         assert callable(callback)
         self._callback_chain_on_error_action_happend.append(callback)
+    
+    #----------------------------------------------------------------------
+    def regist_on_received_success_action(self, callback):
+        """"""
+        assert callable(callback)
+        self._callback_chain_on_received_success_action.append(callback)
+        
         
     
     #----------------------------------------------------------------------

@@ -34,7 +34,7 @@ state_END = 'end'
 # start -> listening
 action_STARTUP = 'action_startup'
 # start -> error
-action_STARTUP_ERROR = 'action_error'
+action_STARTUP_ERROR = 'action_startuperror'
 # listening -> error
 action_RUNTIME_ERROR = 'action_runtimeerror'
 # listening -> end
@@ -69,12 +69,12 @@ class TwistedPlatform(interfaces.AppInterfaces, singleton.Singleton):
     
 
     #----------------------------------------------------------------------
-    def __init__(self, id, config):
+    def __init__(self, id=None, config=None):
         """Constructor"""
         #
         # basic attrs
         #
-        self._id = id
+        self._id = id if id else getuuid()
         
         self.config = config if config else _config.PlatformConfig
         assert isinstance(config, _config.PlatformConfig)
@@ -92,6 +92,7 @@ class TwistedPlatform(interfaces.AppInterfaces, singleton.Singleton):
         self.__platform_emitter = twistedemitter.TwistedPlatformEventEmitter(self.__connector)
         self.__platform_emitter.regist_on_service_node_connected(self.on_service_node_connected)
         self.__platform_emitter.regist_on_error_action_happend(self.on_error_action_happend)
+        self.__platform_emitter.regist_on_received_success_action(self.on_received_success_action)
         
     
     @property
@@ -129,6 +130,7 @@ class TwistedPlatform(interfaces.AppInterfaces, singleton.Singleton):
         # cleaning resource
         #
         self.__platform_emitter.shutdown()
+        self._fsm.action(action_SHUTDOWN)
         
         #
         # end mainloop
@@ -145,7 +147,7 @@ class TwistedPlatform(interfaces.AppInterfaces, singleton.Singleton):
     def mainloop_stop(self):
         """"""
         if not reactor.running:
-            reactor.run()
+            reactor.stop()
     
     #
     # inspects
@@ -170,10 +172,13 @@ class TwistedPlatform(interfaces.AppInterfaces, singleton.Singleton):
         """"""
         _service_id = getuuid()
         
-        self.__platform_emitter.start_service(service_node_id, _service_id, 
-                                             module_name, 
-                                             {'port':service_port,
-                                              'net_if':service_net_interface})
+        config = {"service_node_id":service_node_id,
+                  'service_id':_service_id,
+                  'module_name':module_name,
+                  'launcher_config':{'port':service_port,
+                                     'net_if':service_net_interface}}
+        
+        self.__platform_emitter.start_service(**config)
     
     #
     # passive action (callback)
@@ -193,4 +198,9 @@ class TwistedPlatform(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def on_error_action_happend(self, action):
         """"""
-        
+        pass
+    
+    #----------------------------------------------------------------------
+    def on_received_success_action(self, action):
+        """"""
+        pass
