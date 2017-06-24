@@ -41,13 +41,13 @@ class VikitResponseServiceListPlatform(base.BaseAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, service_info_list):
+    def __init__(self, service_info_dict):
         """Constructor"""
         ackbase.Ackable.__init__(self)
         base.BaseAction.__init__(self)
         
-        assert isinstance(service_info_list, dict)
-        self.services_dict = service_info_list
+        assert isinstance(service_info_dict, dict)
+        self.services_dict = service_info_dict
     
     #----------------------------------------------------------------------
     def __repr__(self):

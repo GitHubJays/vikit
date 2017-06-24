@@ -28,7 +28,7 @@ class VikitTwistedProtocol(Protocol):
 
     #----------------------------------------------------------------------
     def __init__(self, vikit_entity, cryptor=None,
-                 ack_timeout=10, retry_times=5):
+                 ack_timeout=10, retry_times=5, addr=None):
         """"""
         self.ack_pool = ackpool.ACKPool()
         
@@ -39,6 +39,11 @@ class VikitTwistedProtocol(Protocol):
         #
         self.ack_timeout = ack_timeout
         self.retry_times = retry_times
+        #print(dir(addr))
+        self.addr = addr
+        self.peer_ip = addr.host
+        self.peer_host = addr.host
+        print(self.peer_host)
         
         #
         # vikit entity
@@ -210,7 +215,8 @@ class VikitTwistedProtocolFactory(Factory):
         """"""
         return VikitTwistedProtocol(self.entity, self.cryptor,
                                     self.ack_timeout,
-                                    self.retry_times)
+                                    self.retry_times,
+                                    addr=addr)
 
 ########################################################################
 class VikitTwistedProtocolClientFactory(ClientFactory):
@@ -229,7 +235,7 @@ class VikitTwistedProtocolClientFactory(ClientFactory):
     def buildProtocol(self, addr):
         """"""
         _ret = VikitTwistedProtocol(self.entity, self.cryptor,
-                                    self.ack_timeout, self.retry_times)
+                                    self.ack_timeout, self.retry_times, addr=addr)
         
         return _ret
         

@@ -60,7 +60,7 @@ class ClientConfig(object):
     #----------------------------------------------------------------------
     def __init__(self, platform_host='127.0.0.1', platform_port=7000, heartbeat_interval=10,
                  ack_timeout=10, retry_times=5, connect_timeout=30, default_update_interval=10,
-                 cryptor=None):
+                 cryptor=None, service_timeout=30):
         """Constructor"""
         self.platform_host = platform_host
         self.platform_port = platform_port
@@ -71,6 +71,7 @@ class ClientConfig(object):
         self.retry_times = retry_times
         self.connect_timeout = connect_timeout
         self.default_update_interval = default_update_interval
+        self.service_timeout = service_timeout
         
     @property
     def target_host(self):

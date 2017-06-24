@@ -21,7 +21,11 @@ class VikitServiceLauncherInfo(base.VikitDatas):
     def get_dict(self):
         """"""
         return self.config
-        
+    
+    @property
+    def port(self):
+        """"""
+        return self.config.get('port')
         
     
     

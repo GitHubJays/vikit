@@ -17,13 +17,26 @@ class VikitServiceDesc(VikitDatas):
         """Constructor"""
         self.id = id
         assert isinstance(mod_info, dict)
-        self.mod_info = mod_info
+        self._mod_info = mod_info
     
     #----------------------------------------------------------------------
     def get_dict(self):
         """"""
         return {'id':self.id,
-                'mod_info':self.mod_info}
+                'mod_info':self._mod_info}
+    
+    @property
+    def module_info(self):
+        """"""
+        return self._mod_info
+    
+    @property
+    def module_name(self):
+        """"""
+        self.module_info.get('NAME')
+
+        
+        
         
         
         

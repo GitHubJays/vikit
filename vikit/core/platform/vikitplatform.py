@@ -224,6 +224,9 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         if not self._dict_service_node_recorder.has_key(service_node_id):
             self._dict_service_node_recorder[service_node_id] = {}
         
+        _proto = record.get('sender')
+        _ip = _proto.peer_ip
+        record['ip'] = _ip
         self._dict_service_node_recorder[service_node_id].update(record)
         
         for i in self._callback_chain_on_service_node_connected:
@@ -279,6 +282,8 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
             # update owner
             #
             self._dict_service_infos[service_info_obj.id]['service_node_id'] = service_info_obj.service_node_id
+            _ip = self._dict_service_node_recorder.get(service_info_obj.service_node_id).get('ip')
+            self._dict_service_infos[service_info_obj.id]['ip'] = _ip
             
             #
             # update service info data
