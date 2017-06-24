@@ -263,6 +263,11 @@ class TwistdClientAgentPoolEmitter(emitterbase.EmitterBase):
             task.LoopingCall(self.agentpool.update_services_list)
         
         self._interval = default_update_interval
+    
+    @property
+    def connected(self):
+        """"""
+        return self.agentpool.connected
         
     
     #----------------------------------------------------------------------
@@ -288,6 +293,14 @@ class TwistdClientAgentPoolEmitter(emitterbase.EmitterBase):
     def execute(self, module_name, task_id, params, service_id=None):
         """"""
         return self.agentpool.execute(module_name, task_id, params, service_id)
+    
+    #----------------------------------------------------------------------
+    def regist_on_service_update(self, callback):
+        """"""
+        assert callable(callback)
+        
+        self.agentpool.regist_on_service_update(callback)
+        
         
     
         
