@@ -38,22 +38,20 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     # id
     #
     platform_id = None
+    
+    #
+    # callback chains
+    #
+    _callback_chains_service_update = []
+    
 
     #----------------------------------------------------------------------
-    def __init__(self, id='vikitclientagentpool', cryptor=None, ack_timeout=10,
-                 retry_times=5, connect_timeout=30):
+    def __init__(self, id='vikitclientagentpool'):
         """Constructor"""
         self._id = id
         
         self._state = state_PENDING
-        
-        #
-        # basic agent attrs
-        #
-        self._cryptor = cryptor
-        self._ack_timeout = ack_timeout
-        self._retry_times = retry_times
-        self._connect_timeout = connect_timeout
+    
         
     @property
     def id(self):
@@ -80,7 +78,11 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         
         _sender.send(_rsinfos)
     
-    
+    #----------------------------------------------------------------------
+    def regist_on_service_update(self, callback):
+        """"""
+        assert callable(callback)
+        self._callback_chains_service_update.append(callback)
     
     #
     # system callback
@@ -111,6 +113,12 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
             if isinstance(obj, platform_actions.VikitResponseServiceListPlatform):
                 self.handle_response_servicelist_action(obj)
             pass
+    
+    #----------------------------------------------------------------------
+    def on_service_update(self, services):
+        """"""
+        for i in self._callback_chains_service_update:
+            i(services)
         
     #----------------------------------------------------------------------
     def handle_welcome_action(self, obj, *v, **kw):
@@ -137,7 +145,8 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         #
         self._dict_service_infos.clear()
         self._dict_service_infos.update(_dict_services)
-        
+    
+        self.on_service_update(self._dict_service_infos)
         ##
         ## update agent from services
         ##
