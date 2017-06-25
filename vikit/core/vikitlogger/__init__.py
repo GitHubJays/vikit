@@ -95,3 +95,18 @@ def get_client_logger():
         CLIENT_LOGGER = _build_logger(CLIENT_LOGNAME, CLIENT_LOGFILE_NAME)
     
     return CLIENT_LOGGER.output
+
+#
+# netio logger
+#
+NETIO_LOGGER = None
+#----------------------------------------------------------------------
+def get_netio_logger():
+    """"""
+    global NETIO_LOGFILE_NAME, NETIO_LOGGER, NETIO_LOGNAME
+    if NETIO_LOGGER:
+        pass
+    else:
+        NETIO_LOGGER = _build_logger(NETIO_LOGNAME, NETIO_LOGFILE_NAME)
+        
+    return NETIO_LOGGER.output

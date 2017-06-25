@@ -11,6 +11,7 @@ import datetime
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
+from ..vikitlogger import get_netio_logger
 from ..basic import vikitbase
 from . import ackpool, serializer, crypto
 from ..actions import welcome_action
@@ -23,6 +24,8 @@ START_CHAR = '#'
 #
 state_PENDING = 'pending'
 state_WORKING = 'working'
+
+logger = get_netio_logger()
 
 ########################################################################
 class VikitTwistedProtocol(Protocol):
@@ -41,11 +44,9 @@ class VikitTwistedProtocol(Protocol):
         #
         self.ack_timeout = ack_timeout
         self.retry_times = retry_times
-        #print(dir(addr))
         self.addr = addr
         self.peer_ip = addr.host
         self.peer_host = addr.host
-        print(self.peer_host)
         
         #
         # vikit entity
@@ -88,7 +89,6 @@ class VikitTwistedProtocol(Protocol):
         #
         state = 'pending'
         for i in data:
-            #print i
             if len(self._buff):
                 state = 'open'
                 
@@ -117,7 +117,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def objReceived(self, obj):
         """"""
-        print('[twisted <<<<<< {}] {}'.format(datetime.datetime.now(), obj))
+        logger.info(' <<<<<< {}'.format(obj))
         #
         # just got a ack 
         #    ack and drop
@@ -145,7 +145,6 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def handle_obj(self, obj):
         """"""
-        #print('[twisted] handle obj: {}'.format(obj))
         if self._state == state_PENDING:
             
             if isinstance(obj, welcome_action.VikitWelcomeBase):
@@ -167,6 +166,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def send(self, obj):
         """"""
+        logger.info(' >>>>>> {}'.format(obj))
         if isinstance(obj, ackpool.Ackable):
             self.ack_pool.add(obj.token, self._send, (obj,), 
                               ack_timeout=self.ack_timeout, 
@@ -178,7 +178,6 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def _send(self, obj):
         """"""
-        print('[twisted >>>>>> {}] {}'.format(datetime.datetime.now(), obj))
         tessxt = self.serializer.serialize(obj)
         tessxt = START_CHAR + tessxt + SPLITE_CHARS
         self.transport.write(tessxt)
