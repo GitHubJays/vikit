@@ -242,6 +242,11 @@ class VikitService(vikitbase.VikitBase):
         pass
     
     #----------------------------------------------------------------------
+    def on_received_error_action(self, obj, *v, **kw):
+        """"""
+        
+    
+    #----------------------------------------------------------------------
     def on_connection_made(self, *v, **kw):
         """"""
         pass

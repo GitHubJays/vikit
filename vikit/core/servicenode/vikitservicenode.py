@@ -253,6 +253,11 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         print('[!] service node connection made')
     
     #----------------------------------------------------------------------
+    def on_received_error_action(self, obj, *v, **kw):
+        """"""
+        pass
+    
+    #----------------------------------------------------------------------
     def _on_welcomed_success(self, obj, **kw):
         """"""
         #

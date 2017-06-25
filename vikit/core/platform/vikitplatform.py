@@ -60,7 +60,7 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         return self._id
         
     #----------------------------------------------------------------------
-    def on_error_happend(self, *v, **kw):
+    def on_received_error_action(self, *v, **kw):
         """"""
         for i in self._callback_chain_on_error_action_happend:
             i(*v, **kw)

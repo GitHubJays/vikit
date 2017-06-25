@@ -115,6 +115,11 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
             pass
     
     #----------------------------------------------------------------------
+    def on_received_error_action(self, obj, *v, **kw):
+        """"""
+        pass
+    
+    #----------------------------------------------------------------------
     def on_service_update(self, services):
         """"""
         for i in self._callback_chains_service_update:

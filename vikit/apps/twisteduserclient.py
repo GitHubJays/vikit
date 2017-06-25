@@ -198,7 +198,8 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def on_service_update(self, services):
         """"""
-        self.update_agentwrapper_from_services(services)
+        print('[client] got services!')
+        #self.update_agentwrapper_from_services(services)
     
     #----------------------------------------------------------------------
     def build_agent(self, module_name):

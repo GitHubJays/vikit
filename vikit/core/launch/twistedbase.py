@@ -6,6 +6,8 @@
   Created: 06/02/17
 """
 
+import datetime
+
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
 
@@ -67,7 +69,7 @@ class VikitTwistedProtocol(Protocol):
         #
         # init
         #
-        self.ack_pool.regist_timeout_callback(self.entity.on_error_happend)
+        self.ack_pool.regist_timeout_callback(self.entity.on_received_error_action)
 
     #
     # data proccess
@@ -115,7 +117,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def objReceived(self, obj):
         """"""
-        print('[twisted <-<-<-] {}'.format(obj))
+        print('[twisted <<<<<< {}] {}'.format(datetime.datetime.now(), obj))
         #
         # just got a ack 
         #    ack and drop
@@ -176,7 +178,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def _send(self, obj):
         """"""
-        print('[twisted ->->->] {}'.format(obj))
+        print('[twisted >>>>>> {}] {}'.format(datetime.datetime.now(), obj))
         tessxt = self.serializer.serialize(obj)
         tessxt = START_CHAR + tessxt + SPLITE_CHARS
         self.transport.write(tessxt)
