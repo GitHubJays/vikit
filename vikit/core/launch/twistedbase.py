@@ -82,7 +82,7 @@ class VikitTwistedProtocol(Protocol):
             obj = self.serializer.unserialize(i)
             #reactor.callInThread(self.objReceived, obj)
             self.objReceived(obj)
-            
+        
         #
         # pick for stream
         #
