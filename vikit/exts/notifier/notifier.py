@@ -74,3 +74,10 @@ class Notifier(object):
         for i in self.config.adaptors:
             assert isinstance(i, adatporbase.AdaptorBase)
             i.send(_result)
+    
+    #----------------------------------------------------------------------
+    def notify_raw(self, raw_data):
+        """"""
+        for i in self.config.adaptors:
+            assert isinstance(i, adatporbase.AdaptorBase)
+            i.send(raw_data)

@@ -93,6 +93,12 @@ class VikitClient(vikitbase.VikitBase):
     def on_connection_made(self, *v, **k):
         """"""
         pass
+
+    #----------------------------------------------------------------------
+    def on_received_error_action(self, obj, *v, **kw):
+        """"""
+        pass
+        
     
     #----------------------------------------------------------------------
     def handle_welcome_obj(self, obj, *v, **kw):

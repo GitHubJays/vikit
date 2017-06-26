@@ -37,7 +37,8 @@ class VikitBase(object):
         """"""
         pass
     
-    def on_error_happend(self):
+    @abstractmethod
+    def on_received_error_action(self, *v, **kw): #on_error_happend
         """"""
         pass
     
