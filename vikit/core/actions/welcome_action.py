@@ -50,6 +50,25 @@ class VikitClientWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBas
         
         
     
+########################################################################
+class VikitResultSubmitterWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBase):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, id):
+        """Constructor"""
+        base.BaseAction.__init__(self)
+        ackbase.Ackable.__init__(self)
+        
+        self.id = id
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<ResultSubbmitterWelcom from:{}>',format(self.id)
+        
+        
+    
     
     
     

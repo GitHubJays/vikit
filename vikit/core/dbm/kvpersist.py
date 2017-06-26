@@ -8,7 +8,10 @@
 
 from __future__ import unicode_literals
 
-import bsddb185
+try:
+    import bsddb185
+except ImportError as e:
+    import bsddb as bsddb185
 import types
 
 ########################################################################

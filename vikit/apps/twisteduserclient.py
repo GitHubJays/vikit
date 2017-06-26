@@ -13,6 +13,7 @@ from scouter.sop import FSM
 
 from twisted.internet import reactor
 
+from ..core import vikitlogger
 from ..core.vikitclient import vikitagent, vikitagentpool
 from ..core.launch import twistedlaunch
 from ..core.eventemitter import twistedemitter
@@ -20,6 +21,8 @@ from . import interfaces
 from . import _config
 from ..core.utils import getuuid, singleton
 from ..core.vikitdatas import vikittaskfeedback, vikitserviceinfo
+
+logger = vikitlogger.get_client_logger()
 
 ClientConfig = _config.ClientConfig
 
@@ -113,17 +116,24 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         self.config = config if config else _config.ClientConfig()
         assert isinstance(self.config, ClientConfig)
         
+        logger.info('[client] initing id:{} and config'.format(self.id))
+        
         self._dict_agent = {}
         
         #
         # init agentpool
         #
+        logger.info('[client] config platform client to retrieve botnet information')
+        
         self.agentpool_entity = vikitagentpool.VikitClientAgentPool(self.id)
         self.__connector_agentpool = twistedlaunch.TwistdConnector(
                                                                   self.agentpool_entity)
         self.agentpool_emitter = twistedemitter.TwistdClientAgentPoolEmitter(self.__connector_agentpool,
                                                                              self.config.default_update_interval)
         self.agentpool_emitter.regist_on_service_update(self.on_service_update)
+        
+        logger.info('[client] config platform client successfully')
+        
         
     
     @property
@@ -147,13 +157,14 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #
         # start connector
         #
+        logger.info('[client] connecting platform')
         self.__connector_agentpool.connect(self.config.platform_host,
                                            self.config.platform_port,
                                            self.config.cryptor,
                                            self.config.ack_timeout,
                                            self.config.retry_times,
                                            self.config.connect_timeout)
-
+        
         reactor.callInThread(self._start_update_services)
         
         self._fsm.action(action_STARTUP)
@@ -161,14 +172,18 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def _start_update_services(self):
         """"""
-        print('[twistedclient] starting update_services')
+        
         while not self.agentpool_emitter.connected:
             pass
+        
+        logger.info('[client] connected platform successfully')
+        logger.info('[client] start update services')
         self.agentpool_emitter.start_update_services(self.config.default_update_interval)
     
     #----------------------------------------------------------------------
     def shutdown(self):
         """"""
+        logger.info('[client] shutdown client!')
         #
         # clean the resource
         #
@@ -183,12 +198,14 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def mainloop_start(self):
         """"""
+        logger.info('[client] run main loop')
         reactor.run()
-        print('[twisted-servicenode] exit main loop!')
+        logger.info('[client] exit main loop!')
         
     #----------------------------------------------------------------------
     def mainloop_stop(self):
         """"""
+        logger.info('[client] stop main loop')
         if not reactor.running:
             reactor.stop()
 
@@ -198,8 +215,8 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def on_service_update(self, services):
         """"""
-        print('[client] got services!')
-        #self.update_agentwrapper_from_services(services)
+        logger.info('[client] got services from platform!')
+        self.update_agentwrapper_from_services(services)
     
     #----------------------------------------------------------------------
     def build_agent(self, module_name):
@@ -254,6 +271,8 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
                 
             assert isinstance(_wraper, _AgentWraper)
             
+            logger.info('[client] update addr pool: service_id:{} addr:{} update_time:{}'.\
+                        format(service_id, _addr, update_time))
             _wraper.update_addr(service_id, _addr, update_time)
         
         self.shrink_agentwarpper()
