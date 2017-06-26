@@ -43,13 +43,14 @@ class EXPLOADER(object):
 
     def set_exp_mods(self):
         """set only if the pyc_files_path is not None"""
-        _exp_mods = []
+        _exp_mods = {}
         for i in self.get_pyc_files_path():
             sys.path.append(os.path.split(i)[0])
             exp_mod_name = i[i.rindex("\\") + 1:i.rindex('.')]
             print exp_mod_name
             _exp_mod = importlib.import_module(exp_mod_name)
-            _exp_mods.append(_exp_mod)
+            _exp_mods[exp_mod_name]=_exp_mod
+
         self.exp_mods = _exp_mods
 
     def remove_exp_repo(self):
@@ -66,12 +67,11 @@ if __name__ == "__main__":
     print("set successfully")
     print()
     print()
-    for i in exp_repo_loader.exp_mods:
-        i.exploit()
+    #use module name to call exp mod
+    exp_repo_loader.exp_mods['exp_export'].exploit()
     # try delete files and use again
     exp_repo_loader.remove_exp_repo()
     print()
     print()
     print('use after remove:')
-    for i in exp_repo_loader.exp_mods:
-        i.exploit()
+    exp_repo_loader.exp_mods['exp'].exploit()
