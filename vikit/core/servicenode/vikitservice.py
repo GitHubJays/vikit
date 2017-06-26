@@ -9,7 +9,6 @@
 import os
 import types
 
-from ..common import bases
 from ..basic import result
 from ..basic import mod
 from ..basic import vikitbase
@@ -179,15 +178,17 @@ class VikitService(vikitbase.VikitBase):
         
         _sender = self.get_sender(_from)
         #print('[*] got task source sender')
+        if _sender:
+            #
+            # build ResponseResultAction
+            #
+            rspresultaction = task_action.VikitResponseResultAction(result_dict)
+            #print('[*] build')
+            
+            _sender.send(rspresultaction)
+            #print('[*] send result back successfully')
         
-        #
-        # build ResponseResultAction
-        #
-        rspresultaction = task_action.VikitResponseResultAction(result_dict)
-        #print('[*] build')
-        
-        _sender.send(rspresultaction)
-        #print('[*] send result back successfully')
+        return result_dict
         
     #
     # core callback functions
@@ -213,7 +214,6 @@ class VikitService(vikitbase.VikitBase):
             else:
                 _r = i[0](_r)
         
-        print(result_obj._dict_obj)
     
     #
     # core callback 

@@ -7,13 +7,18 @@
 """
 
 from ..actions import welcome_action, servicenode_actions, heartbeat_action
+from ..actions import result_actions
+from ..resultexchanger import TaskIdCacher, ResultCacher
 from . import vikitservice
-from ..basic import vikitbase
+from ..basic import vikitbase, result
 from ..utils.singleton import Singleton
 from ..launch.interfaces import LauncherIf
 from ..vikitdatas import vikitservicedesc, vikitservicelauncherinfo, \
      vikitserviceinfo, healthinfo
+from ..vikitlogger import get_servicenode_logger
 
+
+logger = get_servicenode_logger()
 
 #
 # define state
@@ -26,6 +31,9 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
     """"""
     
     platform_id = None
+    
+    task_id_recorder = TaskIdCacher('sn_task_id_cache.db')
+    result_cacher = ResultCacher('sn_result_cache.db')
 
     #----------------------------------------------------------------------
     def __init__(self, id, heartbeat_interval=10):
@@ -88,6 +96,7 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         # build service
         #
         vs = vikitservice.VikitService(id, service_config)
+        vs.regist_result_callback(self.send_result_to_result_cacher)
         
         #
         # load mod
@@ -149,6 +158,26 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
             del self._dict_launcher[id]
         else:
             raise StandardError('shutdown a service not existed')
+    
+    #----------------------------------------------------------------------
+    def send_result_to_result_cacher(self, result_dict):
+        """"""
+        logger.info('[servicenode] got a result_dict: {}'.format(result_dict))
+        res = result.Result(result_dict)
+        task_id = result_dict.get('task_id')
+        
+        _submit = result_actions.SubmitResultAction(self.id)
+        
+        self.task_id_recorder.push_one(task_id)
+        self.result_cacher.save_result(task_id, res)
+        _submit.add(task_id, res)
+        
+        _sender = self.get_sender(self.platform_id)
+        logger.info('[servicenode] preparing to send results to platform')
+        if _sender:
+            _sender.send(_submit)
+        else:
+            logger.error('[servicenode] cannot got paltform sender! cannot cache result')
     
     #
     # start / stop heartbeat
@@ -222,8 +251,9 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
                                    launcher_kw_config=obj.launcher_config)
             elif isinstance(obj, servicenode_actions.StopServiceAction):
                 self.shutdown_service(id=obj.id)
-            else:
-                raise NotImplementedError()
+            
+            elif isinstance(obj, result_actions.AckSubmitResultAction):
+                self.handle_ack_submit_result_action(obj)
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
@@ -267,6 +297,15 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         
         self.start_heartbeat(self.heartbeat_interval)
         self._state = state_WORK
+    
+    #----------------------------------------------------------------------
+    def handle_ack_submit_result_action(self, obj):
+        """"""
+        assert isinstance(obj, result_actions.AckSubmitResultAction)
+        
+        for i in obj.task_id_list:
+            self.task_id_recorder.remove_one(i)
+            self.result_cacher.delete_result(i)
         
         
         

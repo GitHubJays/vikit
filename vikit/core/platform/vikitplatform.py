@@ -11,8 +11,9 @@ import time
 from ..basic import vikitbase
 from ..utils.singleton import Singleton
 from ..actions import welcome_action, heartbeat_action, platform_actions
-from ..actions import error_actions, base
+from ..actions import error_actions, base, result_actions
 from ..vikitdatas import vikitserviceinfo
+from ..resultexchanger import ResultCacher
 
 ########################################################################
 class VikitPlatform(vikitbase.VikitBase, Singleton):
@@ -48,11 +49,18 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
     _callback_chain_on_service_node_connected = []
     _callback_chain_on_error_action_happend = []
     _callback_chain_on_received_success_action = []
+    
+    #
+    # result cache
+    #
+    result_cacher = ResultCacher('result_cache.db')
 
     #----------------------------------------------------------------------
     def __init__(self, id):
         """Constructor"""
         self._id = id
+        
+        
     
     @property
     def id(self):
@@ -97,8 +105,57 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
                 self.update_from_heartbeat(obj)
             elif isinstance(obj, base.SuccessAction):
                 self.on_received_success_action(obj)
-            else:
-                print('[platform] No handler for {}'.format(obj))
+        
+        #
+        # process result cache
+        #
+        if isinstance(obj, result_actions.SubmitResultAction):
+            self.handle_submit_result_action(obj)
+        elif isinstance(obj, result_actions.RequireResultAction):
+            self.handle_require_result_action(obj)
+        elif isinstance(obj, result_actions.AckSubmitResultAction):
+            self.handle_ack_submit_result_action(obj)
+        
+        return
+    
+    #----------------------------------------------------------------------
+    def handle_submit_result_action(self, obj):
+        """"""
+        assert isinstance(obj, result_actions.SubmitResultAction)
+        
+        _task_ids = []
+        for task_id, result_obj in obj.result_dict.items():
+            self.result_cacher.save_result(task_id, result_obj)
+            _task_ids.append(task_id)
+        
+        sender = self.get_sender(obj.id)
+        if sender:
+            _ack = result_actions.AckSubmitResultAction()
+            for task_id in _task_ids:
+                _ack.add(task_id)
+            sender.send(_ack)
+    
+    #----------------------------------------------------------------------
+    def handle_require_result_action(self, obj):
+        """"""
+        assert isinstance(obj, result_actions.RequireResultAction)
+    
+        _tids = obj.task_id_list
+        
+        sender = self.get_sender(obj.id)
+        if sender:
+            _submit = result_actions.SubmitResultAction(self.id)
+            for task_id in _tids:
+                _submit.add(task_id, self.result_cacher.load_result(task_id))
+            sender.send(_submit)
+    
+    #----------------------------------------------------------------------
+    def handle_ack_submit_result_action(self, obj):
+        """"""
+        assert isinstance(obj, result_actions.AckSubmitResultAction)
+        
+        for i in obj.task_id_list:
+            self.result_cacher.delete_result(i)
     
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
