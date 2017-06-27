@@ -162,6 +162,11 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
     #----------------------------------------------------------------------
     def send_result_to_result_cacher(self, result_dict):
         """"""
+        if result_dict:
+            pass
+        else:
+            return None
+        
         logger.info('[servicenode] got a result_dict: {}'.format(result_dict))
         res = result.Result(result_dict)
         task_id = result_dict.get('task_id')

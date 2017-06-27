@@ -111,7 +111,6 @@ class VikitService(vikitbase.VikitBase):
         self._dict_task_state = {}
         self._dict_task_from_client_id = {}
         self._dict_client_record = {}
-        self._dict_sender_record = dict()
         
         #
         # result callback chains
@@ -167,28 +166,27 @@ class VikitService(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def send_result_back(self, result_dict):
         """"""
-        #assert isinstance(result_dict, dict)
-        
-        #print('[*] got result success!')
         _tid = result_dict.get('task_id')
         
         
         _from = self._dict_task_from_client_id.get(_tid)
-        #print('[*] got task source! ')
         
         _sender = self.get_sender(_from)
-        #print('[*] got task source sender')
+
         if _sender:
             #
             # build ResponseResultAction
             #
             rspresultaction = task_action.VikitResponseResultAction(result_dict)
-            #print('[*] build')
             
             _sender.send(rspresultaction)
-            #print('[*] send result back successfully')
-        
-        return result_dict
+            
+            #
+            # dont send to platform
+            #
+            return None
+        else:
+            return result_dict
         
     #
     # core callback functions
@@ -239,7 +237,20 @@ class VikitService(vikitbase.VikitBase):
     #----------------------------------------------------------------------
     def on_connection_lost(self, *v, **kw):
         """"""
-        pass
+        _from_id = kw.get('from_id')
+        
+        if self._dict_record_sender.has_key(_from_id):
+            del self._dict_record_sender[_from_id]
+        
+        if self._dict_client_record.has_key(_from_id):
+            del self._dict_client_record[_from_id]
+
+        _tasks = filter(lambda x: _from_id == x, self._dict_task_from_client_id.keys())
+        
+        for i in _tasks:
+            del self._dict_task_from_client_id[i]
+            del self._dict_task_state[i]
+        
     
     #----------------------------------------------------------------------
     def on_received_error_action(self, obj, *v, **kw):
