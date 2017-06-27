@@ -215,7 +215,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def on_service_update(self, services):
         """"""
-        logger.info('[client] got services from platform!')
+        logger.info('[client] got services from platform! {}'.format(services))
         self.update_agentwrapper_from_services(services)
     
     #----------------------------------------------------------------------

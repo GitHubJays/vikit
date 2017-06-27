@@ -8,6 +8,9 @@
 
 from twisted.internet import task
 from ..actions.ackbase import Ack, Ackable
+from ..vikitlogger import get_netio_logger
+
+logger = get_netio_logger()
 
 ########################################################################
 class ACKError(Exception):
@@ -111,7 +114,9 @@ class ACKPool(object):
             _r.ack()
             del self._pool[id]
         else:
-            raise ACKError('not such id:{} in ackpool'.format(id))
+            logger.warn('[ackpool] no such id:{} in ackpool')
+            #raise ACKError('not such id:{} in ackpool'.format(id))
+            
         
     #----------------------------------------------------------------------
     def regist_timeout_callback(self, callback):
