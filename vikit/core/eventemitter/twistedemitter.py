@@ -227,6 +227,12 @@ class TwistedClientEventEmitter(emitterbase.EmitterBase):
         conn.send(taskaction)
         
         return task_id, params
+
+    #----------------------------------------------------------------------
+    def shutdown(self):
+        """"""
+        self.launcher.connector.disconnect()
+        #reactor.stop()        
         
     
 

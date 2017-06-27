@@ -13,6 +13,10 @@ from ..launch.twistedlaunch import TwistdConnector
 from ..utils import getuuid
 from ..eventemitter import twistedemitter
 
+from ..vikitlogger import get_client_logger
+
+logger = get_client_logger()
+
 ########################################################################
 class VikitAgent(object):
     """"""
@@ -37,6 +41,9 @@ class VikitAgent(object):
         # 
         self._dict_client_record = {}
         self._list_result_callback = []
+        self._dict_task_id_map_client_id = {}
+        
+        self.regist_result_callback(self.got_result_and_shutdown)
     
     #----------------------------------------------------------------------
     def add_service_addr(self, id, host, port):
@@ -75,7 +82,16 @@ class VikitAgent(object):
                       ack_timeout=self.ack_timeout, retry_times=5,
                       connect_timeout=self.connection_timeout)
         
+        #
+        # waiting for connecting
+        #
+        logger.info('[agent:{}] client:{} waiting for connecting'.format(self.module_name, id))
+        
+        logger.info('[agent:{}] client:{} connected'.format(self.module_name, id))
         emitter = twistedemitter.TwistedClientEventEmitter(_conn)
+        
+        if not self._dict_client_record.has_key(id):
+            self._dict_client_record[id] = {}
         self._dict_client_record[id]['emitter'] = emitter
         
         return emitter
@@ -83,14 +99,64 @@ class VikitAgent(object):
         
     
     #----------------------------------------------------------------------
-    def execute(self, task_id, params):
+    def execute(self, task_id, params, addr=None):
         """"""
-        _client_id = self.select_service()
-        if _client_id:
-            emitter = self._dict_client_record.get(_client_id).get('emitter')
+        #
+        # got emitter
+        #
+        emitter = None
+        client_id = None
+        if addr:
+            client_id = getuuid()
+            emitter = self._start_client(client_id, addr)
+        else:
+            _client_id = self.select_service()
+            if _client_id:
+                emitter = self._dict_client_record.get(_client_id).get('emitter')
+        
+        if emitter:
             assert isinstance(emitter, twistedemitter.TwistedClientEventEmitter)
+            
+            #
+            # record client
+            #
+            self._dict_client_record[client_id] = emitter
+            
             emitter.execute(task_id, params)
             
+            #
+            # record task_id mapping client_id 
+            #
+            self._dict_task_id_map_client_id[task_id] = client_id
+            return True
+        else:
+            return False
+    
+    #----------------------------------------------------------------------
+    def execute_offline(self, task_id, params, addr=None):
+        """"""
+        #
+        # got emitter
+        #
+        emitter = None
+        client_id = None
+        if addr:
+            client_id = getuuid()
+            emitter = self._start_client(client_id, addr)
+        else:
+            _client_id = self.select_service()
+            if _client_id:
+                emitter = self._dict_client_record.get(_client_id).get('emitter')
+        
+        if emitter:
+            assert isinstance(emitter, twistedemitter.TwistedClientEventEmitter)
+            #
+            # do not record client do not record task_id
+            #
+            emitter.execute(task_id, params)
+            
+            emitter.shutdown()
+            return True
         else:
             return False
     
@@ -113,7 +179,32 @@ class VikitAgent(object):
         
         self._list_result_callback.append((callback, callback_excp))
     
-    
+    #----------------------------------------------------------------------
+    def got_result_and_shutdown(self, result):
+        """"""
+        _task_id = result.get('task_id')
+        
+        _client_id = self._dict_task_id_map_client_id.get(_task_id)
+        
+        if _client_id:
+            emitter = self._dict_client_record.get(_client_id).get('emitter')
+            assert isinstance(emitter, twistedemitter.TwistedClientEventEmitter)
+            emitter.shutdown()
+            logger.info('[agent:{}] close the emitter:{} for getting the result'.\
+                        format(self.module_name, _task_id))
+            
+            #
+            # clean client record and task record
+            #
+            del self._dict_client_record[_client_id]
+            del self._dict_task_id_map_client_id[_task_id]
+        else:
+            logger.warn('[agent:{}] cannot find the client_id who own the task_id'.format(self.module_name))
+        
+        
+        
+        return result
+        
     
             
         

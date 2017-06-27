@@ -35,6 +35,10 @@ class VikitServiceInfo(base.VikitDatas):
     def id(self):
         """"""
         return self.desc.id
-        
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<ServiceInfo Desc:{} LauncherInfo:{}>'.format(self.desc, self.linfo)
     
     

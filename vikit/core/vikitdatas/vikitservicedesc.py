@@ -33,7 +33,12 @@ class VikitServiceDesc(VikitDatas):
     @property
     def module_name(self):
         """"""
-        self.module_info.get('NAME')
+        return self.module_info.get('NAME')
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<ServiceDesc: {}>'.format(self._mod_info)
 
         
         

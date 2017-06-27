@@ -26,6 +26,11 @@ class VikitServiceLauncherInfo(base.VikitDatas):
     def port(self):
         """"""
         return self.config.get('port')
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<ServiceLaucherInfo config:{}>'.format(self.config)
         
     
     

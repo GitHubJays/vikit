@@ -9,6 +9,10 @@
 import time
 from abc import ABCMeta, abstractmethod
 
+from ..vikitlogger import get_netio_logger
+
+logger = get_netio_logger()
+
 ########################################################################
 class VikitBase(object):
     """"""
@@ -53,8 +57,11 @@ class VikitBase(object):
     def get_sender(self, id, default=None, timeout=10):
         """"""
         end = time.time() + timeout
+        
+        logger.debug('[vikit_entity] getting sender!')
         while (not self.connected) and end > time.time() :
             pass
+        logger.debug('[vikit_entity] got sender')
         
         return self._dict_record_sender.get(id, default)
     

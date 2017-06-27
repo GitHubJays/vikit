@@ -21,6 +21,7 @@ from . import interfaces
 from . import _config
 from ..core.utils import getuuid, singleton
 from ..core.vikitdatas import vikittaskfeedback, vikitserviceinfo
+from ..core import resultexchanger
 
 logger = vikitlogger.get_client_logger()
 
@@ -56,10 +57,11 @@ class _AgentWraper(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, agent, service_timeout=30):
+    def __init__(self, agent, service_timeout=30, desc=None):
         """Constructor"""
         self._dict_addrs = {}
         self.service_timeout = service_timeout
+        self.desc = desc
         
         assert isinstance(agent, vikitagent.VikitAgent)
         self.agent = agent
@@ -92,7 +94,8 @@ class _AgentWraper(object):
     #----------------------------------------------------------------------
     def execute(self, task_id, params):
         """"""
-        self.agent.execute(task_id, params)
+        
+        return self.agent.execute(task_id, params)
     
 
 ########################################################################
@@ -108,6 +111,8 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     _fsm.create_action(action_WORK, state_CONNECTED, state_WORKING)
     _fsm.create_action(action_SHUTDOWN, state_WORKING, state_END)
     _fsm.create_action(action_CONNECTED_ERROR, state_START, state_ERROR)
+    
+    task_recorder = resultexchanger.TaskIdCacher('client_tasks.pkl')
 
     #----------------------------------------------------------------------
     def __init__(self, id=None, config=None):
@@ -233,10 +238,12 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     def update_agentwrapper_from_services(self, service_infos):
         """"""
         for service_id, service_info in service_infos.items():
+            logger.info('[client] updateting service_id:{}'.format(service_id))
             _sinfo_obj = service_info.get('service_info')
             assert isinstance(_sinfo_obj, vikitserviceinfo.VikitServiceInfo)
             
             update_time = service_info.get('update_timestamp')
+            logger.info('[client] last update time: {}'.format(update_time))
             
             #
             # addr
@@ -244,6 +251,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
             _port = _sinfo_obj.linfo.port
             _ip = service_info.get('ip')
             _addr = (_ip, _port)
+            logger.info('[client] addr: {}'.format(_addr))
             
             #
             # module_name
@@ -251,31 +259,32 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
             _name = _sinfo_obj.desc.module_name
             
             #
-            # desc
-            #
-            desc = _sinfo_obj.desc.get_dict().get('mod_info')
-            for i in _NO_DESC:
-                if desc.has_key(i):
-                    del desc[i]
-            _desc = desc
-            
-            #
             # build agent
             #
             if not self._dict_agent.has_key(_name):
+                #
+                # desc
+                #
+                desc = _sinfo_obj.desc.get_dict().get('mod_info')
+                for i in _NO_DESC:
+                    if desc.has_key(i):
+                        del desc[i]
+                _desc = desc
+                
                 _agent = self.build_agent(_name)
-                _wraper = _AgentWraper(_agent, self.config.service_timeout)
+                _wraper = _AgentWraper(_agent, self.config.service_timeout, desc=_desc)
                 self._dict_agent[_name] = _wraper
             else:
                 _wraper = self._dict_agent.get(_name)
                 
             assert isinstance(_wraper, _AgentWraper)
             
-            logger.info('[client] update addr pool: service_id:{} addr:{} update_time:{}'.\
-                        format(service_id, _addr, update_time))
+            logger.info('[client] update addr pool: service_id:{} addr:{} update_time:{} module_name:{}'.\
+                        format(service_id, _addr, update_time, _name))
             _wraper.update_addr(service_id, _addr, update_time)
         
         self.shrink_agentwarpper()
+        logger.info('[client] now all agents: {}'.format(self._dict_agent))
             
             
     #----------------------------------------------------------------------
@@ -287,7 +296,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def on_receive_result(self, result_obj, *v, **kw):
         """"""
-        print(result_obj)
+        logger.info('[client] got a result: {}'.format(result_obj))
     
     #
     # active action
@@ -299,8 +308,14 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         
         task_id = task_id if task_id else getuuid()
 
-        _fd = vikittaskfeedback.VikitTaskFeedback()
+        #_fd = vikittaskfeedback.VikitTaskFeedback()
         
         _wrapper = self._dict_agent.get(module_name)
-        _wrapper.execute(task_id, params)
+        
+        if _wrapper.execute(task_id, params):
+            #self.task_recorder.push_one(task_id)
+            #self.task_recorder.save()
+            pass
+        else:
+            raise StandardError('[client] execute faild')
     
