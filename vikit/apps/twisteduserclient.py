@@ -7,6 +7,7 @@
 """
 
 import time
+import random
 
 from pprint import pprint
 from scouter.sop import FSM
@@ -59,7 +60,7 @@ class _AgentWraper(object):
     #----------------------------------------------------------------------
     def __init__(self, agent, service_timeout=30, desc=None):
         """Constructor"""
-        self._dict_addrs = {}
+        self._dict_service_record = {}
         self.service_timeout = service_timeout
         self.desc = desc
         
@@ -70,8 +71,10 @@ class _AgentWraper(object):
     #----------------------------------------------------------------------
     def update_addr(self, service_id, addr, update_time):
         """"""
-        if not self._dict_addrs.has_key(service_id):
-            _ = self._dict_addrs[service_id] = {}
+        if not self._dict_service_record.has_key(service_id):
+            _ = self._dict_service_record[service_id] = {}
+        else:
+            _ = self._dict_service_record.get(service_id)
             
         _['addr'] = addr
         _['update_time'] = update_time
@@ -80,22 +83,49 @@ class _AgentWraper(object):
     def shrink(self):
         """"""
         def pick_timeout_service_id(id):
-            _d = self._dict_addrs.get(id)
+            _d = self._dict_service_record.get(id)
             if _d:
-                return int(self.service_timeout) > \
+                return int(self.service_timeout) < \
                        int(time.time()) - int(_d['update_time'])
             else:
                 return True
-        ids = filter(pick_timeout_service_id, self._dict_addrs.keys())
-        
+        ids = filter(pick_timeout_service_id, self._dict_service_record.keys())
+        logger.info('[agent:{}] filtered ids:{}'.\
+                    format(self.agent.module_name, ids))
         for i in ids:
-            del self._dict_addrs[i]
+            del self._dict_service_record[i]
+            
+        
+            
+    #----------------------------------------------------------------------
+    def select_service(self):
+        """"""
+        service_id = None
+        logger.info('[agent:{}] current service record: {}'.\
+                    format(self.agent.module_name, self._dict_service_record))
+        if len(self._dict_service_record) > 0:
+            service_id = random.choice(self._dict_service_record.keys())
+        else:
+            logger.warn('[agent:{}] no valid service can be used.'.\
+                        format(self.agent.module_name))
+        
+        return service_id
+            
+        
         
     #----------------------------------------------------------------------
-    def execute(self, task_id, params):
+    def execute(self, task_id, params, offline=False):
         """"""
+        _service_id = self.select_service()
+        _addr = self._dict_service_record.get(_service_id).get('addr')
         
-        return self.agent.execute(task_id, params)
+        if not _addr:
+            return False
+
+        if offline:
+            return self.agent.execute_offline(task_id, params, addr=_addr)
+        else:
+            return self.agent.execute(task_id, params, addr=_addr)
     
 
 ########################################################################
@@ -220,7 +250,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def on_service_update(self, services):
         """"""
-        logger.info('[client] got services from platform! {}'.format(services))
+        logger.debug('[client] got services from platform! {}'.format(services))
         self.update_agentwrapper_from_services(services)
     
     #----------------------------------------------------------------------
@@ -238,12 +268,12 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     def update_agentwrapper_from_services(self, service_infos):
         """"""
         for service_id, service_info in service_infos.items():
-            logger.info('[client] updateting service_id:{}'.format(service_id))
+            logger.debug('[client] updateting service_id:{}'.format(service_id))
             _sinfo_obj = service_info.get('service_info')
             assert isinstance(_sinfo_obj, vikitserviceinfo.VikitServiceInfo)
             
             update_time = service_info.get('update_timestamp')
-            logger.info('[client] last update time: {}'.format(update_time))
+            logger.debug('[client] last update time: {}'.format(update_time))
             
             #
             # addr
@@ -251,7 +281,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
             _port = _sinfo_obj.linfo.port
             _ip = service_info.get('ip')
             _addr = (_ip, _port)
-            logger.info('[client] addr: {}'.format(_addr))
+            logger.debug('[client] addr: {}'.format(_addr))
             
             #
             # module_name
@@ -279,12 +309,12 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
                 
             assert isinstance(_wraper, _AgentWraper)
             
-            logger.info('[client] update addr pool: service_id:{} addr:{} update_time:{} module_name:{}'.\
+            logger.debug('[client] update addr pool: service_id:{} addr:{} update_time:{} module_name:{}'.\
                         format(service_id, _addr, update_time, _name))
             _wraper.update_addr(service_id, _addr, update_time)
         
         self.shrink_agentwarpper()
-        logger.info('[client] now all agents: {}'.format(self._dict_agent))
+        logger.debug('[client] now all agents: {}'.format(self._dict_agent))
             
             
     #----------------------------------------------------------------------
