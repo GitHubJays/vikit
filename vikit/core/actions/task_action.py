@@ -30,7 +30,8 @@ class VikitExecuteTaskAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<ExecuteTask task_id:{} params:{}>'.format(self.task_id, self.params)
+        return '<ExecuteTask task_id:{} params:{} token:{}>'.format(self.task_id, self.params,
+                                                                    self.token)
         
 
 ########################################################################
@@ -52,11 +53,12 @@ class VikitResponseResultAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<TaskResult task_id:{} result:{}>'.format(self.id,
-                                                          self.result)
+        return '<TaskResult task_id:{} result:{} token:{}>'.format(self.id,
+                                                          self.result,
+                                                          self.token)
 
 ########################################################################
-class VikitRequestTaskStatus(base.BaseAction, ackbase.Ackable):
+class VikitRequestTaskStatusAction(base.BaseAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------
@@ -71,7 +73,7 @@ class VikitRequestTaskStatus(base.BaseAction, ackbase.Ackable):
         return self.task_id
     
 ########################################################################
-class VikitResponseTaskStatus(base.BaseAction, ackbase.Ackable):
+class VikitResponseTaskStatusAction(base.BaseAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------

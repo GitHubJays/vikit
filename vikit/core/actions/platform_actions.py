@@ -34,7 +34,7 @@ class VikitRequestServiceListPlatform(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<RequestServiceList from client_id:{}>'.format(self.id)
+        return '<RequestServiceList from client_id:{} token:{}>'.format(self.id, self.token)
     
 ########################################################################
 class VikitResponseServiceListPlatform(base.BaseAction, ackbase.Ackable):
@@ -52,7 +52,7 @@ class VikitResponseServiceListPlatform(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<ResponseServiceList from platform>'
+        return '<ResponseServiceList from platform token:{}>'.format(self.token)
         
     
     

@@ -100,7 +100,7 @@ class VikitTwistedProtocol(Protocol):
                 if state == 'open':
                     state = 'close'
                 else:
-                    pass
+                    continue
             
             if state == 'open':
                 self._buff = self._buff + i
@@ -117,7 +117,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def objReceived(self, obj):
         """"""
-        logger.info(' <<<<<< {}'.format(obj))
+        logger.debug(' <<<<<< {}'.format(obj))
         #
         # just got a ack 
         #    ack and drop
@@ -166,7 +166,6 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def send(self, obj):
         """"""
-        logger.info(' >>>>>> {}'.format(obj))
         if isinstance(obj, ackpool.Ackable):
             self.ack_pool.add(obj.token, self._send, (obj,), 
                               ack_timeout=self.ack_timeout, 
@@ -178,6 +177,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def _send(self, obj):
         """"""
+        logger.debug(' >>>>>> {}'.format(obj))
         tessxt = self.serializer.serialize(obj)
         tessxt = START_CHAR + tessxt + SPLITE_CHARS
         self.transport.write(tessxt)

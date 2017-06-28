@@ -142,7 +142,10 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     _fsm.create_action(action_SHUTDOWN, state_WORKING, state_END)
     _fsm.create_action(action_CONNECTED_ERROR, state_START, state_ERROR)
     
+    
+    
     task_recorder = resultexchanger.TaskIdCacher('client_tasks.pkl')
+    
 
     #----------------------------------------------------------------------
     def __init__(self, id=None, config=None):
@@ -153,8 +156,16 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         
         logger.info('[client] initing id:{} and config'.format(self.id))
         
-        self._dict_agent = {}
+        #
+        # record task and its callback chains
+        #
+        self._dict_callback_chains_for_every_task = {}
         
+        #
+        # record agents
+        #
+        self._dict_agent = {}        
+
         #
         # init agentpool
         #
@@ -200,17 +211,14 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
                                            self.config.retry_times,
                                            self.config.connect_timeout)
         
-        reactor.callInThread(self._start_update_services)
+        self._start_update_services()
         
         self._fsm.action(action_STARTUP)
     
     #----------------------------------------------------------------------
     def _start_update_services(self):
         """"""
-        
-        while not self.agentpool_emitter.connected:
-            pass
-        
+
         logger.info('[client] connected platform successfully')
         logger.info('[client] start update services')
         self.agentpool_emitter.start_update_services(self.config.default_update_interval)
@@ -222,7 +230,8 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #
         # clean the resource
         #
-        raise NotImplemented()
+        self._dict_agent.clear()
+        self.task_recorder.save()
         
         #
         #
@@ -324,15 +333,38 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
             obj.shrink()
     
     #----------------------------------------------------------------------
-    def on_receive_result(self, result_obj, *v, **kw):
+    def on_receive_result(self, result_dict, *v, **kw):
         """"""
-        logger.info('[client] got a result: {}'.format(result_obj))
+        _task_id = result_dict.get('task_id')
+        #
+        # remove result record and save immediately
+        #
+        self.task_recorder.remove_one(_task_id)
+        self.task_recorder.save()
+        
+        #
+        # process
+        #
+        logger.info('[client] got a result: {}'.format(result_dict))
+        
+        #
+        # get callback chains and call each 
+        #
+        _callbacks = self._dict_callback_chains_for_every_task.get(_task_id, [])
+        
+        _result = result_dict
+        for callback in _callbacks:
+            _result = callback(_result)
+            
+        # clean
+        del self._dict_callback_chains_for_every_task[_task_id]
     
     #
     # active action
     #
     #----------------------------------------------------------------------
-    def execute(self, module_name, params, task_id=None):
+    @_fsm.onstate(action_WORK)
+    def execute(self, module_name, params, offline=False, task_id=None, callback_chains=[], ):
         """"""
         state = False
         
@@ -341,11 +373,22 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #_fd = vikittaskfeedback.VikitTaskFeedback()
         
         _wrapper = self._dict_agent.get(module_name)
+        assert isinstance(_wrapper, _AgentWraper)
         
-        if _wrapper.execute(task_id, params):
-            #self.task_recorder.push_one(task_id)
-            #self.task_recorder.save()
+        #
+        # record task / record callback
+        #
+        if not self._dict_callback_chains_for_every_task.has_key(task_id):
+            self._dict_callback_chains_for_every_task[task_id] = []
+        
+        for callback in callback_chains:
+            assert callable(callback)
+            self._dict_callback_chains_for_every_task[task_id].append(callback)
+        
+        self.task_recorder.push_one(task_id)
+        if _wrapper.execute(task_id, params, offline=offline):
             pass
         else:
+            self.task_recorder.remove_one(task_id)
             raise StandardError('[client] execute faild')
     

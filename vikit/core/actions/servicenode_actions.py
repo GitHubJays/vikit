@@ -30,9 +30,10 @@ class StartServiceAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<StartService service_id:{} module_name:{} config:{}>'.format(self.service_id, 
+        return '<StartService service_id:{} module_name:{} config:{} token:{}>'.format(self.service_id, 
                                                                               self.module_name,
-                                                                              self.launcher_config)
+                                                                              self.launcher_config,
+                                                                              self.token)
 
 ########################################################################
 class StartServiceErrorAction(base.ErrorAction, ackbase.Ackable):
@@ -56,9 +57,10 @@ class StartServiceErrorAction(base.ErrorAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<StartServiceError service_id:{} module_name:{} config:{}>'.format(self.service_id, 
+        return '<StartServiceError service_id:{} module_name:{} config:{} token:{}>'.format(self.service_id, 
                                                                               self.module_name,
-                                                                              self.launcher_config)
+                                                                              self.launcher_config,
+                                                                              self.token)
 
 ########################################################################
 class StartServiceSuccessAction(base.SuccessAction, ackbase.Ackable):
@@ -81,9 +83,10 @@ class StartServiceSuccessAction(base.SuccessAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<StartServiceSuccess service_id:{} module_name:{} config:{}>'.format(self.service_id, 
+        return '<StartServiceSuccess service_id:{} module_name:{} config:{} token:{}>'.format(self.service_id, 
                                                                               self.module_name,
-                                                                              self.launcher_config)
+                                                                              self.launcher_config,
+                                                                              self.token)
     
 
 ########################################################################
@@ -105,7 +108,8 @@ class StopServiceAction(base.BaseAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<StopService service_id:{}>'.format(self.service_id)
+        return '<StopService service_id:{} token:{}>'.format(self.service_id,
+                                                             self.token)
         
     
     
@@ -129,7 +133,8 @@ class StopServiceErrorAction(base.ErrorAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<StopServiceError service_id:{}>'.format(self.service_id)
+        return '<StopServiceError service_id:{} token:{}>'.format(self.service_id,
+                                                                  self.token)
     
 ########################################################################
 class StopServiceSuccessAction(base.SuccessAction, ackbase.Ackable):
@@ -150,7 +155,7 @@ class StopServiceSuccessAction(base.SuccessAction, ackbase.Ackable):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<StopService service_id:{}>'.format(self.service_id)
+        return '<StopService service_id:{} token:{}>'.format(self.service_id, self.token)
         
     
     

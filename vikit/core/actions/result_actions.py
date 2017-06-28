@@ -37,6 +37,12 @@ class SubmitResultAction(base.BaseAction, ackbase.Ackable):
     def result_dict(self):
         """"""
         return self._dict_id_map_result
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return "<SubmitResult tasks:{} token:{}>".format(self._dict_id_map_result.keys(),
+                                                         self.token)
 
 
 ########################################################################
@@ -60,6 +66,12 @@ class AckSubmitResultAction(base.BaseAction, ackbase.Ackable):
     def task_id_list(self):
         """"""
         return self._list_acked_tasks
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<SubmitResultACK tasks:{} token:{}>'.format(self._list_acked_tasks, 
+                                                            self.token)
         
 
     
@@ -91,6 +103,12 @@ class RequireResultAction(base.BaseAction, ackbase.Ackable):
     def add(self, task_id):
         """"""
         self._tids.append(task_id)
+        
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return "<RequireResult tasks:{} token:{}>".format(self.task_id_list,
+                                                          self.token)
     
     
     
@@ -116,6 +134,12 @@ class AckRequireResultAction(base.BaseAction, ackbase.Ackable):
     def task_id_list(self):
         """"""
         return self._list_acked_tasks
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<RequireResultACK tasks:{} token:{}>'.format(self._list_acked_tasks,
+                                                             self.token)
         
     
     

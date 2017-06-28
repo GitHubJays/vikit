@@ -30,7 +30,7 @@ class VikitWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBase):
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<WelcomeAction from:{}>'.format(self.id)
+        return '<WelcomeAction from:{} token:{}>'.format(self.id, self.token)
     
 ########################################################################
 class VikitClientWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBase):
@@ -46,7 +46,7 @@ class VikitClientWelcomeAction(base.BaseAction, ackbase.Ackable, VikitWelcomeBas
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<ClientWelcomeAction from:{}>'.format(self.id)
+        return '<ClientWelcomeAction from:{} token:{}>'.format(self.id, self.token)
         
         
     
@@ -65,7 +65,8 @@ class VikitResultSubmitterWelcomeAction(base.BaseAction, ackbase.Ackable, VikitW
     #----------------------------------------------------------------------
     def __repr__(self):
         """"""
-        return '<ResultSubbmitterWelcom from:{}>',format(self.id)
+        return '<ResultSubbmitterWelcom from:{} token:{}>',format(self.id,
+                                                                  self.token)
         
         
     
