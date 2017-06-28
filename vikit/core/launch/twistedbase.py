@@ -193,11 +193,26 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def connectionMade(self):
         """"""
+        #
+        # regist * sender
+        #
+        if self.entity._dict_record_sender == {}:
+            self.entity.regist_sender('*', self)
+        else:
+            pass
+        
         if not self.entity.disable_default_connectionMade:
             self.send(welcome_action.VikitWelcomeAction(self.entity.id))
         
         self.entity.on_connection_made(self, from_id=self.id, sender=self)
         
+        #
+        # entity cache sender
+        #
+        _cache_sender = self.entity.get_cache_sender()
+        while _cache_sender.queue.qsize() > 0:
+            _p = _cache_sender.queue.get()
+            self.send(_p)
         
 ########################################################################
 class VikitTwistedProtocolFactory(Factory):

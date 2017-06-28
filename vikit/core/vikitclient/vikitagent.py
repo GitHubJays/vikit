@@ -120,7 +120,9 @@ class VikitAgent(object):
             #
             # record client
             #
-            self._dict_client_record[client_id] = emitter
+            if not self._dict_client_record.has_key(client_id):
+                self._dict_client_record[client_id] = {}
+            self._dict_client_record[client_id]['emitter'] = emitter
             
             emitter.execute(task_id, params)
             

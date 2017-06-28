@@ -7,11 +7,29 @@
 """
 
 import time
+import queue
 from abc import ABCMeta, abstractmethod
 
 from ..vikitlogger import get_netio_logger
 
 logger = get_netio_logger()
+
+########################################################################
+class _CacheSender():
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """"""
+        self.queue = queue.Queue()
+    
+    #----------------------------------------------------------------------
+    def send(self, obj):
+        """"""
+        self.queue.put(obj)
+        
+    
+    
 
 ########################################################################
 class VikitBase(object):
@@ -22,6 +40,17 @@ class VikitBase(object):
     disable_default_connectionMade = False
     
     _dict_record_sender = {}
+    
+    #----------------------------------------------------------------------
+    def get_cache_sender(self):
+        """"""
+        if not hasattr(self, '_cache_sender'):
+            self._cache_sender = _CacheSender()
+        else:
+            pass
+        
+        return self._cache_sender
+        
 
     #
     # result callback
@@ -54,20 +83,19 @@ class VikitBase(object):
     # sender
     #
     #@abstractmethod
-    def get_sender(self, id, default=None, timeout=10):
+    def get_sender(self, id=None):
         """"""
-        end = time.time() + timeout
-        
-        logger.debug('[vikit_entity] getting sender!')
-        while (not self.connected) and end > time.time() :
-            pass
-        logger.debug('[vikit_entity] got sender')
-        
-        return self._dict_record_sender.get(id, default)
+        if id:
+            return self._dict_record_sender.get(id, self.get_cache_sender())
+        else:
+            return self._dict_record_sender.get('*', self.get_cache_sender())
     
     #@abstractmethod
     def regist_sender(self, sender, id=None):
         """"""
+        if id is None:
+            id = '*'
+            
         if self._dict_record_sender.has_key(id):
             pass
         else:
