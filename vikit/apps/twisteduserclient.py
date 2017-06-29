@@ -396,7 +396,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     # active action
     #
     #----------------------------------------------------------------------
-    @_fsm.onstate(state_WORKING)
+    @_fsm.onstate(state_CONNECTED, state_WORKING)
     def execute(self, module_name, params, offline=False, task_id=None, callback_chains=[], ):
         """"""
         state = False

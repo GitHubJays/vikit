@@ -232,9 +232,9 @@ class VikitService(vikitbase.VikitBase):
         else:
             if isinstance(obj, task_action.VikitExecuteTaskAction):
                 self.handle_executetaskaction_obj(obj, from_id)
-                
-            #if isinstance(obj, task_action.VikitRequestTaskStatus):
-                #self.handle_request_task_status(obj)
+
+            if isinstance(obj, task_action.VikitRequestTaskStatusAction):
+                self.handle_request_task_status(obj)
                 
             else:
                 print('[!] Sorry No Handler For This Request')
