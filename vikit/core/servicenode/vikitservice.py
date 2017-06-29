@@ -228,7 +228,7 @@ class VikitService(vikitbase.VikitBase):
             if isinstance(obj, task_action.VikitExecuteTaskAction):
                 self.handle_executetaskaction_obj(obj, from_id)
                 
-            if isinstance(obj, task_action.VikitRequestTaskStatus):
+            if isinstance(obj, task_action.VikitRequestTaskStatusAction):
                 self.handle_request_task_status(obj)
                 
             else:
