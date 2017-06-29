@@ -8,13 +8,16 @@
 
 from twisted.internet import task, reactor
 
+from ..vikitlogger import get_client_logger
 from . import emitterbase
 from ..platform import vikitplatform
 from ..servicenode import vikitservicenode, vikitservice
 from ..vikitclient import vikitclient, vikitagentpool
 from ..launch.twistedlaunch import TwistdLauncher
 from ..launch import twistedbase
-from ..actions import servicenode_actions, heartbeat_action, task_action
+from ..actions import servicenode_actions, heartbeat_action, task_action, result_actions
+
+logger = get_client_logger()
 
 ########################################################################
 class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
@@ -205,28 +208,29 @@ class TwistedClientEventEmitter(emitterbase.EmitterBase):
         assert isinstance(self.client, vikitclient.VikitClient)
         
         self.client.regist_execute_callback(self._send_executeaction)
+        self.client.regist_shutdown_func(self.shutdown)
     
 
     
     #----------------------------------------------------------------------
-    def execute(self, task_id, params):
+    def execute(self, task_id, params, offline=False):
         """"""
-        self.client.execute_task(task_id, params)
+        self.client.execute_task(task_id, params, offline=offline)
         
     #----------------------------------------------------------------------
-    def _send_executeaction(self, task_id, params):
+    def _send_executeaction(self, task_id, params, offline):
         """"""
         #conn = self.get_sender()
         
         #
         # build execute action
         #
-        taskaction = task_action.VikitExecuteTaskAction(task_id, params)
+        taskaction = task_action.VikitExecuteTaskAction(task_id, params, offline)
         
         conn = self.client.get_sender(self.client.service_id)
         conn.send(taskaction)
         
-        return task_id, params
+        return task_id, params, offline
 
     #----------------------------------------------------------------------
     def shutdown(self):
@@ -268,6 +272,9 @@ class TwistdClientAgentPoolEmitter(emitterbase.EmitterBase):
         self._loopingcall_start_update_services = \
             task.LoopingCall(self.agentpool.update_services_list)
         
+        self._loopingcall_start_require_offline_tasks = \
+            task.LoopingCall(self.require_offline_tasks)
+        
         self._interval = default_update_interval
     
     @property
@@ -293,7 +300,38 @@ class TwistdClientAgentPoolEmitter(emitterbase.EmitterBase):
                 self._loopingcall_start_update_services.start(interval)
             else:
                 self._loopingcall_start_update_services.start(self._interval)
+    
+    #----------------------------------------------------------------------
+    def start_require_offline_tasks(self, recorder, interval=None):
+        """"""
+        self.task_recorder = recorder
         
+        if self._loopingcall_start_require_offline_tasks.running:
+            if interval == self._interval:
+                self._loopingcall_start_require_offline_tasks.stop()
+                self._loopingcall_start_require_offline_tasks.start(self._interval)
+        else:
+            if interval:
+                self._loopingcall_start_require_offline_tasks.start(interval)
+            else:
+                self._loopingcall_start_require_offline_tasks.start(self._interval)
+    
+    #----------------------------------------------------------------------
+    def require_offline_tasks(self):
+        """"""        
+        if not hasattr(self, 'task_recorder'):
+            return 
+        else:
+            if self.task_recorder.task_id_list:
+                logger.info('[client] getting task_recorder, list:{}'.format(self.task_recorder.task_id_list))
+                _rqr_rslt = result_actions.RequireResultAction(self.agentpool.id)
+                for i in self.task_recorder.task_id_list:
+                    _rqr_rslt.add(i)
+                _sender = self.agentpool.get_sender(self.agentpool.platform_id)
+                _sender.send(_rqr_rslt)
+            else:
+                pass
+                    
         
     #----------------------------------------------------------------------
     def execute(self, module_name, task_id, params, service_id=None):
@@ -307,7 +345,13 @@ class TwistdClientAgentPoolEmitter(emitterbase.EmitterBase):
         
         self.agentpool.regist_on_service_update(callback)
         
-        
+    #----------------------------------------------------------------------
+    def regist_on_receive_offline_result(self, callback):
+        """"""
+        assert callable(callback)
+    
+        self.agentpool.regist_on_receive_offline_result(callback)
+    
     
         
     

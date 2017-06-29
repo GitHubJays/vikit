@@ -36,7 +36,7 @@ class VikitClient(vikitbase.VikitBase):
     # core operations
     #
     #----------------------------------------------------------------------
-    def execute_task(self, task_id, params):
+    def execute_task(self, task_id, params, offline=False):
         """"""
         assert isinstance(params, dict)
         
@@ -44,13 +44,18 @@ class VikitClient(vikitbase.VikitBase):
         for i in self._list_execute_callback_chains:
             if i[1]:
                 try:
-                    _tid, params = i[0](_tid, params)
+                    _tid, params, offline = i[0](_tid, params, offline)
                 except Exception as e:
                     i[1](e)
             else:
-                _tid, params = i[0](_tid, params)        
+                _tid, params, offline = i[0](_tid, params, offline)        
         
-        return _tid, params
+        return _tid, params, offline
+
+    #----------------------------------------------------------------------
+    def shutdown(self):
+        """"""
+        self._func_shutdown()
     
     
     #
@@ -62,11 +67,13 @@ class VikitClient(vikitbase.VikitBase):
         if not self.get_sender(self.service_id):
             if isinstance(obj, welcome_action.VikitWelcomeAction):
                 self.handle_welcome_obj(obj, *v, **kw)
-            else:
-                raise NotImplemented()
+
         else:
             if isinstance(obj, task_action.VikitResponseResultAction):
                 self.handle_result_response_obj(obj, *v, **kw)
+            #elif isinstance(obj, task_action.ACKVikitExecuteTaskAction):
+                ##self.shutdown()
+                #pass
     
     #----------------------------------------------------------------------
     def on_received_result(self, result_dict):
@@ -130,9 +137,14 @@ class VikitClient(vikitbase.VikitBase):
         if exception_callback:
             assert callable(exception_callback), 'not a callable obj'
             
-        self._list_execute_callback_chains.append((callback, exception_callback))        
+        self._list_execute_callback_chains.append((callback, exception_callback))
+    
+    #----------------------------------------------------------------------
+    def regist_shutdown_func(self, calling):
+        """"""
+        assert callable(calling)
 
-        
+        self._func_shutdown = calling
         
         
     

@@ -9,6 +9,7 @@
 import time
 
 from ..basic import vikitbase
+from ..basic import result
 from ..utils.singleton import Singleton
 from ..actions import welcome_action, heartbeat_action, platform_actions
 from ..actions import error_actions, base, result_actions
@@ -146,7 +147,9 @@ class VikitPlatform(vikitbase.VikitBase, Singleton):
         if sender:
             _submit = result_actions.SubmitResultAction(self.id)
             for task_id in _tids:
-                _submit.add(task_id, self.result_cacher.load_result(task_id))
+                _taskresult = self.result_cacher.load_result(task_id)
+                if isinstance(_taskresult, result.Result):
+                    _submit.add(task_id, _taskresult)
             sender.send(_submit)
     
     #----------------------------------------------------------------------

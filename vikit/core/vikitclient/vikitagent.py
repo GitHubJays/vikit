@@ -95,11 +95,20 @@ class VikitAgent(object):
         self._dict_client_record[id]['emitter'] = emitter
         
         return emitter
-        
-        
     
     #----------------------------------------------------------------------
     def execute(self, task_id, params, addr=None):
+        """"""
+        return self._execute(task_id, params, addr=addr)
+    
+    #----------------------------------------------------------------------
+    def execute_offline(self, task_id, params, addr=None):
+        """"""
+        return self._execute(task_id, params, addr=addr, offline=True)
+        
+    
+    #----------------------------------------------------------------------
+    def _execute(self, task_id, params, addr=None, offline=False):
         """"""
         #
         # got emitter
@@ -124,40 +133,12 @@ class VikitAgent(object):
                 self._dict_client_record[client_id] = {}
             self._dict_client_record[client_id]['emitter'] = emitter
             
-            emitter.execute(task_id, params)
+            emitter.execute(task_id, params, offline)
             
             #
             # record task_id mapping client_id 
             #
             self._dict_task_id_map_client_id[task_id] = client_id
-            return True
-        else:
-            return False
-    
-    #----------------------------------------------------------------------
-    def execute_offline(self, task_id, params, addr=None):
-        """"""
-        #
-        # got emitter
-        #
-        emitter = None
-        client_id = None
-        if addr:
-            client_id = getuuid()
-            emitter = self._start_client(client_id, addr)
-        else:
-            _client_id = self.select_service()
-            if _client_id:
-                emitter = self._dict_client_record.get(_client_id).get('emitter')
-        
-        if emitter:
-            assert isinstance(emitter, twistedemitter.TwistedClientEventEmitter)
-            #
-            # do not record client do not record task_id
-            #
-            emitter.execute(task_id, params)
-            
-            emitter.shutdown()
             return True
         else:
             return False

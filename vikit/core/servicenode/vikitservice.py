@@ -107,10 +107,12 @@ class VikitService(vikitbase.VikitBase):
         # record task_state(running or state)
         # record client_record
         # record task_from_id
+        # record
         #
         self._dict_task_state = {}
         self._dict_task_from_client_id = {}
         self._dict_client_record = {}
+        self._list_offline_tasks = []
         
         #
         # result callback chains
@@ -182,9 +184,12 @@ class VikitService(vikitbase.VikitBase):
             _sender.send(rspresultaction)
             
             #
-            # dont send to platform
+            # offline tag send to platform
             #
-            return None
+            if _tid in self._list_offline_tasks:
+                return result_dict
+            else:
+                return None
         else:
             return result_dict
         
@@ -228,8 +233,8 @@ class VikitService(vikitbase.VikitBase):
             if isinstance(obj, task_action.VikitExecuteTaskAction):
                 self.handle_executetaskaction_obj(obj, from_id)
                 
-            if isinstance(obj, task_action.VikitRequestTaskStatus):
-                self.handle_request_task_status(obj)
+            #if isinstance(obj, task_action.VikitRequestTaskStatus):
+                #self.handle_request_task_status(obj)
                 
             else:
                 print('[!] Sorry No Handler For This Request')
@@ -285,11 +290,19 @@ class VikitService(vikitbase.VikitBase):
         # record sender_id
         #
         self._dict_task_from_client_id[obj.id] = from_id
+        if obj.offline:
+            self._list_offline_tasks.append(obj.id)
         
         #
         # record params
         #
         self.execute_task(obj.id, obj.params)
+        
+        #
+        # send feed back
+        #
+        _sender = self.get_sender(from_id)
+        _sender.send(task_action.ACKVikitExecuteTaskAction(obj.id))
         
         return
     

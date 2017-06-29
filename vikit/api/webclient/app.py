@@ -21,5 +21,5 @@ def set_client(client):
 def run_web_service(port):
     """"""
     app.run(host='127.0.0.1', port=port, debug=True)
-    
+
 

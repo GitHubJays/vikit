@@ -14,7 +14,9 @@ from scouter.sop import FSM
 
 from twisted.internet import reactor
 
+from ..core.basic import result
 from ..core import vikitlogger
+from ..core.actions import result_actions
 from ..core.vikitclient import vikitagent, vikitagentpool
 from ..core.launch import twistedlaunch
 from ..core.eventemitter import twistedemitter
@@ -177,6 +179,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         self.agentpool_emitter = twistedemitter.TwistdClientAgentPoolEmitter(self.__connector_agentpool,
                                                                              self.config.default_update_interval)
         self.agentpool_emitter.regist_on_service_update(self.on_service_update)
+        self.agentpool_emitter.regist_on_receive_offline_result(self.on_receive_offline_result)
         
         logger.info('[client] config platform client successfully')
         
@@ -211,9 +214,21 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
                                            self.config.retry_times,
                                            self.config.connect_timeout)
         
+        self._fsm.action(action_STARTUP)
+        
+        #
+        # update available service
+        #
         self._start_update_services()
         
-        self._fsm.action(action_STARTUP)
+        logger.info('[client] start require offline tasks')
+        #
+        # update offline tasks
+        #
+        self._start_require_offline_tasks()
+        
+        self._fsm.action(action_WORK)
+        
     
     #----------------------------------------------------------------------
     def _start_update_services(self):
@@ -222,6 +237,13 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         logger.info('[client] connected platform successfully')
         logger.info('[client] start update services')
         self.agentpool_emitter.start_update_services(self.config.default_update_interval)
+    
+    #----------------------------------------------------------------------
+    def _start_require_offline_tasks(self):
+        """"""
+        self.agentpool_emitter.start_require_offline_tasks(self.task_recorder, \
+                                                           interval=self.config.default_update_interval)
+            
     
     #----------------------------------------------------------------------
     def shutdown(self):
@@ -259,7 +281,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     #----------------------------------------------------------------------
     def on_service_update(self, services):
         """"""
-        logger.debug('[client] got services from platform! {}'.format(services))
+        #logger.debug('[client] got services from platform! {}'.format(services))
         self.update_agentwrapper_from_services(services)
     
     #----------------------------------------------------------------------
@@ -359,11 +381,22 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         # clean
         del self._dict_callback_chains_for_every_task[_task_id]
     
+    #----------------------------------------------------------------------
+    def on_receive_offline_result(self, result_submit_action):
+        """"""
+        assert isinstance(result_submit_action, result_actions.SubmitResultAction)
+        
+        _values = result_submit_action.result_dict.values()
+        for i in _values:
+            logger.debug('[client] got offline result: {}'.format(i))
+            assert isinstance(i, result.Result)
+            self.on_receive_result(i._dict_obj)
+    
     #
     # active action
     #
     #----------------------------------------------------------------------
-    @_fsm.onstate(action_WORK)
+    @_fsm.onstate(state_WORKING)
     def execute(self, module_name, params, offline=False, task_id=None, callback_chains=[], ):
         """"""
         state = False
@@ -385,6 +418,9 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
             assert callable(callback)
             self._dict_callback_chains_for_every_task[task_id].append(callback)
         
+        #
+        # execute and recoud
+        #
         self.task_recorder.push_one(task_id)
         if _wrapper.execute(task_id, params, offline=offline):
             pass

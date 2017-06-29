@@ -115,7 +115,10 @@ class TaskIdCacher(object):
             fp.write(_text)
 
 
-        
+    @property
+    def task_id_list(self):
+        """"""
+        return self._list_task_ids
     
     
     

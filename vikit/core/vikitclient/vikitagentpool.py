@@ -7,6 +7,7 @@
 """
 
 from ..actions import welcome_action, servicenode_actions, platform_actions
+from ..actions import result_actions
 from ..basic import vikitbase
 from ..utils import singleton
 from ..vikitdatas import vikitserviceinfo, vikitservicedesc, vikitservicelauncherinfo
@@ -42,7 +43,8 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     #
     # callback chains
     #
-    _callback_chains_service_update = []
+    _list_callback_chains_service_update = []
+    _list_callback_chains_retrive_offline_result = []
     
 
     #----------------------------------------------------------------------
@@ -82,7 +84,7 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
     def regist_on_service_update(self, callback):
         """"""
         assert callable(callback)
-        self._callback_chains_service_update.append(callback)
+        self._list_callback_chains_service_update.append(callback)
     
     #
     # system callback
@@ -112,7 +114,8 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         else:
             if isinstance(obj, platform_actions.VikitResponseServiceListPlatform):
                 self.handle_response_servicelist_action(obj)
-            pass
+            elif isinstance(obj, result_actions.SubmitResultAction):
+                self.on_received_submit_result(obj)
     
     #----------------------------------------------------------------------
     def on_received_error_action(self, obj, *v, **kw):
@@ -120,10 +123,32 @@ class VikitClientAgentPool(vikitbase.VikitBase, singleton.Singleton):
         pass
     
     #----------------------------------------------------------------------
+    def on_received_submit_result(self, obj):
+        """"""
+        assert isinstance(obj, result_actions.SubmitResultAction)
+        _sender = self.get_sender(self.platform_id)
+        _ids = obj.result_dict.keys()
+        
+        acksubmit = result_actions.AckSubmitResultAction()
+        for _id in _ids:
+            acksubmit.add(_id)
+        _sender.send(acksubmit)
+        
+        for i in self._list_callback_chains_retrive_offline_result:
+            obj = i(obj)
+    
+    #----------------------------------------------------------------------
     def on_service_update(self, services):
         """"""
-        for i in self._callback_chains_service_update:
+        for i in self._list_callback_chains_service_update:
             i(services)
+    
+    #----------------------------------------------------------------------
+    def regist_on_receive_offline_result(self, callback):
+        """"""
+        assert callable(callback)
+        
+        self._list_callback_chains_retrive_offline_result.append(callback)
         
     #----------------------------------------------------------------------
     def handle_welcome_action(self, obj, *v, **kw):

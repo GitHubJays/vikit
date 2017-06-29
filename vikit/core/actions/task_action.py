@@ -14,13 +14,14 @@ class VikitExecuteTaskAction(base.BaseAction, ackbase.Ackable):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, task_id, params):
+    def __init__(self, task_id, params, offline=False):
         """Constructor"""
         #ackbase.Ackable.__init__(self)
         self.token = ackbase.getuuid()
         
         self.task_id = task_id
         self.params = params
+        self.offline = offline
         
     @property
     def id(self):
@@ -32,7 +33,29 @@ class VikitExecuteTaskAction(base.BaseAction, ackbase.Ackable):
         """"""
         return '<ExecuteTask task_id:{} params:{} token:{}>'.format(self.task_id, self.params,
                                                                     self.token)
+########################################################################
+class ACKVikitExecuteTaskAction(base.BaseAction, ackbase.Ackable):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, task_id):
+        """Constructor"""
+        base.BaseAction.__init__(self)
+        ackbase.Ackable.__init__(self)
         
+        self.task_id = task_id
+        
+    @property
+    def id(self):
+        """"""
+        return self.task_id
+    
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        """"""
+        return '<AckExecuteTask task_id:{} token:{}>'.format(self.task_id, self.token)
+    
+    
 
 ########################################################################
 class VikitResponseResultAction(base.BaseAction, ackbase.Ackable):

@@ -17,43 +17,16 @@ c.start()
 def execute_task():
     """"""
     global c
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})
-    c.execute('demo', {"target":'http://tbis.me',
-                       'payload':'adfa',
-                       'config':{'param1':True,
-                                 'param2':'asdfasd'}})    
 
-reactor.callLater(15, execute_task)
+    c.execute('demo', {"target":'http://tbis.me',
+                       'payload':'adfa',
+                       'config':{'param1':True,
+                                 'param2':'asdfasd'}}, offline=True)
+    c.execute('demo', {"target":'http://tbis.me',
+                       'payload':'adfa',
+                       'config':{'param1':True,
+                                 'param2':'asdfasd'}})   
+
+reactor.callLater(5, execute_task)
 
 c.mainloop_start()
