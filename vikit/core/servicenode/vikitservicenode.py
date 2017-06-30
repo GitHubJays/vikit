@@ -233,6 +233,7 @@ class VikitServiceNode(vikitbase.VikitBase, Singleton):
         #
         if sender:
             sender.send(hbobj)
+            #pass
         else:
             print('sender lost (connection lost)')
         

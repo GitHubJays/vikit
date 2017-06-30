@@ -140,6 +140,7 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
         self.servicenode = connector.entity
         assert isinstance(self.servicenode, vikitservicenode.VikitServiceNode) 
         
+        
         self._loopingcall_heartbeat = task.LoopingCall(self._send_heartbeat)
         
         #
@@ -183,7 +184,6 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
     #----------------------------------------------------------------------
     def _send_heartbeat(self):
         """"""
-        #print('[>>>>>>>>>>>>>>>>] hb')
         self.servicenode._send_heartbeat()
     
     #----------------------------------------------------------------------

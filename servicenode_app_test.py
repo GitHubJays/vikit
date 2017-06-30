@@ -9,7 +9,8 @@
 from vikit.apps import twistedservicenode
 
 config = twistedservicenode.ServiceNodeConfig(platform_host='127.0.0.1',
-                                              platform_port=7000)
+                                              platform_port=7000,
+                                              heartbeat_interval=20)
 
 sn = twistedservicenode.TwistedServiceNode(config=config)
 sn.start()

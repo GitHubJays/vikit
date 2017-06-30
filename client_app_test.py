@@ -14,7 +14,7 @@ c = twisteduserclient.TwistedClient()
 c.start()
 
 #----------------------------------------------------------------------
-def execute_task():
+def execute_task1():
     """"""
     global c
 
@@ -22,11 +22,17 @@ def execute_task():
                        'payload':'adfa',
                        'config':{'param1':True,
                                  'param2':'asdfasd'}}, offline=True)
+
+#----------------------------------------------------------------------
+def execute_task2():
+    """"""
+    
     c.execute('demo', {"target":'http://tbis.me',
                        'payload':'adfa',
                        'config':{'param1':True,
-                                 'param2':'asdfasd'}})   
+                                 'param2':'asdfasd'}}, offline=True)   
 
-reactor.callLater(5, execute_task)
+#reactor.callLater(1, execute_task1)
 
+reactor.callLater(3, execute_task2)
 c.mainloop_start()

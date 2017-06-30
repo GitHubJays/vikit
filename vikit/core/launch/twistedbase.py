@@ -7,6 +7,7 @@
 """
 
 import datetime
+import io
 
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol, Factory, ClientFactory
@@ -83,7 +84,7 @@ class VikitTwistedProtocol(Protocol):
             obj = self.serializer.unserialize(i)
             #reactor.callInThread(self.objReceived, obj)
             self.objReceived(obj)
-        
+
         #
         # pick for stream
         #
@@ -180,8 +181,11 @@ class VikitTwistedProtocol(Protocol):
         logger.debug(' >>>>>> {}'.format(obj))
         tessxt = self.serializer.serialize(obj)
         tessxt = START_CHAR + tessxt + SPLITE_CHARS
-        self.transport.write(tessxt)
-        
+
+        #
+        # do not use (FileWriteDescriptor) self.transport.write 
+        #
+        self.transport.writeSomeData(tessxt)
         return 
     
     #----------------------------------------------------------------------
