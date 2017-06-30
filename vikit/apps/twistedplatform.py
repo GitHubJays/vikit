@@ -156,12 +156,39 @@ class TwistedPlatform(interfaces.AppInterfaces, singleton.Singleton):
     def get_service_nodes(self):
         """"""
         return self.platform_entity._dict_service_node_recorder.keys()
+    
+    #----------------------------------------------------------------------
+    def get_services(self):
+        """"""
+        return self.platform_entity._dict_service_infos.keys()
+    
+    #----------------------------------------------------------------------
+    def get_service_nodes_info(self):
+        """"""
+        return self.platform_entity._dict_service_node_recorder
+    
+    #----------------------------------------------------------------------
+    def get_service_node_info_by_id(self, service_node_id):
+        """"""
+        return self.platform_entity._dict_service_node_recorder.get(service_node_id)
+    
+    #----------------------------------------------------------------------
+    def get_services_info(self):
+        """"""
+        return self.platform_entity._dict_service_infos
+    
+    #----------------------------------------------------------------------
+    def get_service_info_by_id(self, service_id):
+        """"""
+        return self.platform_entity._dict_service_infos.get(service_id)
+    
+    
         
     
     #
     # active action!
     #
-    @_fsm.onstate(state_START)
+    @_fsm.onstate(state_START, state_LISTENING)
     def add_default_service(self, module_name, port):
         """"""
         self._list_default_service.append((module_name, port))

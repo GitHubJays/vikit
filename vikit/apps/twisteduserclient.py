@@ -214,8 +214,6 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
                                            self.config.retry_times,
                                            self.config.connect_timeout)
         
-        self._fsm.action(action_STARTUP)
-        
         #
         # update available service
         #
@@ -226,8 +224,6 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         # update offline tasks
         #
         self._start_require_offline_tasks()
-        
-        self._fsm.action(action_WORK)
         
     
     #----------------------------------------------------------------------
@@ -282,6 +278,12 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     def on_service_update(self, services):
         """"""
         #logger.debug('[client] got services from platform! {}'.format(services))
+        #
+        # update services  
+        #
+        if self.state == state_START:
+            self._fsm.action(action_STARTUP)
+            self._fsm.action(action_WORK)
         self.update_agentwrapper_from_services(services)
     
     #----------------------------------------------------------------------
@@ -406,7 +408,8 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #_fd = vikittaskfeedback.VikitTaskFeedback()
         
         _wrapper = self._dict_agent.get(module_name)
-        assert isinstance(_wrapper, _AgentWraper)
+        if not isinstance(_wrapper, _AgentWraper):
+            raise ClientError('not a valid ')
         
         #
         # record task / record callback
@@ -426,5 +429,28 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
             pass
         else:
             self.task_recorder.remove_one(task_id)
-            raise StandardError('[client] execute faild')
+            raise ClientError('execute faild')
+    
+    @_fsm.onstate(state_WORKING, state_CONNECTED)
+    def get_available_modules(self):
+        """"""
+        return self._dict_agent.keys()
+    
+    @_fsm.onstate(state_WORKING, state_CONNECTED)
+    def get_help_for_module(self, module_name):
+        """"""
+        _wraper = self._dict_agent.get(module_name)
+        if _wraper:
+            assert isinstance(_wraper, _AgentWraper)
+            return _wraper.desc
+        else:
+            return None
+        
+
+########################################################################
+class ClientError(Exception):
+    """"""
+
+    
+    
     
