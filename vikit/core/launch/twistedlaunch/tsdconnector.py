@@ -6,6 +6,8 @@
   Created: 06/17/17
 """
 
+import time
+
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientCreator
 from ..interfaces import ConnecterIf
@@ -50,14 +52,13 @@ class TwistdConnector(ConnecterIf):
                                                     ack_timeout,
                                                     retry_times)
         
+        
         _twistedconnect = reactor.connectTCP(target_host, target_port, factory, 
-                                             connect_timeout)
-        
-        #client = ClientCreator(reactor, VikitTwistedProtocol,
-                               #self.entity, cryptor, ack_timeout, retry_times)       
-        #client.connectTCP(target_host, target_port, timeout=connect_timeout)
-        
+                                                 connect_timeout)
+  
         self.connector = _twistedconnect
+        
+
         
         
     #----------------------------------------------------------------------

@@ -42,7 +42,7 @@ def get_client():
     return CLIENT
 
 def twisted_start_client(platform_host='127.0.0.1', platform_port=7000, 
-                         async=True, id=None, **config):
+                         async=True, id=None, update_client_state=True, **config):
     """"""
     global CLIENT, CONFIG, ID
     
@@ -53,7 +53,8 @@ def twisted_start_client(platform_host='127.0.0.1', platform_port=7000,
     
     CLIENT.start()
     
-    __start_update_client_state_until_client_working()
+    if update_client_state:
+        __start_update_client_state_until_client_working()
     
     if not async:
         CLIENT.mainloop_start()
@@ -90,9 +91,14 @@ def execute(module_name, params, offline=False, task_id=None, callback_chains=[]
     client = get_client()
     
     try:
+        print('execute action ')
         client.execute(module_name, params, offline, task_id, callback_chains)
+        print('execute action end')
+        
     except twisteduserclient.ClientError:
-        task_id = None
+        pass
+    
+    client.execute(module_name, params, offline, task_id, callback_chains)
     
     return task_id
 
@@ -132,4 +138,14 @@ def __start_update_client_state_until_client_working():
     
     _loopingcall = LoopingCall(_update_client_state_until_client_working)
     _loopingcall.start(0.3)
-    
+
+#----------------------------------------------------------------------
+def call_in_thread(executable):
+    """"""
+    reactor.callInThread(executable)
+
+#----------------------------------------------------------------------
+def get_state():
+    """"""
+    global _fsm
+    return _fsm.state

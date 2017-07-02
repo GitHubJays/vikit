@@ -6,6 +6,7 @@
   Created: 06/24/17
 """
 
+from multiprocessing import Process
 from twisted.internet import reactor
 
 from vikit.apps import twisteduserclient
@@ -55,5 +56,6 @@ def test_api():
         print(api.client.get_help_for_module('demo'))
     reactor.callLater(2, print_info)
     api.client.mainloop_start()
-    
-test_api()
+
+
+test_app()

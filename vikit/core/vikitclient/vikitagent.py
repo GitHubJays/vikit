@@ -78,17 +78,16 @@ class VikitAgent(object):
             _client.regist_result_callback(*i)
         
         _conn = TwistdConnector(_client)
-        _conn.connect(*addr, cryptor=self.cryptor,
-                      ack_timeout=self.ack_timeout, retry_times=5,
-                      connect_timeout=self.connection_timeout)
-        
+        emitter = twistedemitter.TwistedClientEventEmitter(_conn)
+
         #
         # waiting for connecting
         #
         logger.info('[agent:{}] client:{} waiting for connecting'.format(self.module_name, id))
-        
-        logger.info('[agent:{}] client:{} connected'.format(self.module_name, id))
-        emitter = twistedemitter.TwistedClientEventEmitter(_conn)
+    
+        _conn.connect(*addr, cryptor=self.cryptor,
+                      ack_timeout=self.ack_timeout, retry_times=5,
+                      connect_timeout=self.connection_timeout)
         
         if not self._dict_client_record.has_key(id):
             self._dict_client_record[id] = {}
@@ -121,7 +120,7 @@ class VikitAgent(object):
         else:
             _client_id = self.select_service()
             if _client_id:
-                emitter = self._dict_client_record.get(_client_id).get('emitter')
+                emitter = self._dict_client_record.get(_client_id).get('emitter')        
         
         if emitter:
             assert isinstance(emitter, twistedemitter.TwistedClientEventEmitter)
@@ -133,6 +132,7 @@ class VikitAgent(object):
                 self._dict_client_record[client_id] = {}
             self._dict_client_record[client_id]['emitter'] = emitter
             
+            logger.info('[agent:{}] client:{} connected'.format(self.module_name, client_id))
             emitter.execute(task_id, params, offline)
             
             #

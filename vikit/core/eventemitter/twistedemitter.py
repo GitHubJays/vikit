@@ -101,7 +101,8 @@ class TwistedPlatformEventEmitter(emitterbase.EmitterBase):
         #
         # shutdown reactor
         #
-        reactor.stop()
+        if reactor.running:
+            reactor.stop()
         
         
         #self.launcher.connector.shutdown()
@@ -191,7 +192,8 @@ class TwistedServiceNodeEventEmitter(emitterbase.EmitterBase):
         """"""
         self.launcher.connector.disconnect()
         #self.launcher.connector.stop()
-        reactor.stop()
+        if reactor.running:
+            reactor.stop()
         
 
 ########################################################################
@@ -227,8 +229,11 @@ class TwistedClientEventEmitter(emitterbase.EmitterBase):
         #
         taskaction = task_action.VikitExecuteTaskAction(task_id, params, offline)
         
-        conn = self.client.get_sender(self.client.service_id)
+        conn = self.client.get_sender()
+        
+        logger.info('[client] ExecuteAction sending!')
         conn.send(taskaction)
+        logger.info('[client] ExecuteAction sent!')
         
         return task_id, params, offline
 

@@ -261,14 +261,15 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
     def mainloop_start(self):
         """"""
         logger.info('[client] run main loop')
-        reactor.run()
+        if not reactor.running:
+            reactor.run()
         logger.info('[client] exit main loop!')
         
     #----------------------------------------------------------------------
     def mainloop_stop(self):
         """"""
         logger.info('[client] stop main loop')
-        if not reactor.running:
+        if reactor.running:
             reactor.stop()
 
     #
