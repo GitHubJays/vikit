@@ -162,6 +162,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         # record task and its callback chains
         #
         self._dict_callback_chains_for_every_task = {}
+        self._list_result_common_callback_chains = []
         
         #
         # record agents
@@ -377,12 +378,23 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #
         _callbacks = self._dict_callback_chains_for_every_task.get(_task_id, [])
         
-        _result = result_dict
-        for callback in _callbacks:
-            _result = callback(_result)
-            
-        # clean
-        del self._dict_callback_chains_for_every_task[_task_id]
+        if _callbacks:
+            _result = result_dict
+            for callback in _callbacks:
+                _result = callback(_result)
+                
+            # clean
+            del self._dict_callback_chains_for_every_task[_task_id]
+        
+        #
+        # get callback common
+        #
+        _r = result_dict
+        for i in self._list_result_common_callback_chains:
+            try:
+                _r = i(_r)
+            except:
+                logger.error('[client] process result error in common result callback!')
     
     #----------------------------------------------------------------------
     def on_receive_offline_result(self, result_submit_action):
@@ -415,12 +427,13 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #
         # record task / record callback
         #
-        if not self._dict_callback_chains_for_every_task.has_key(task_id):
-            self._dict_callback_chains_for_every_task[task_id] = []
-        
-        for callback in callback_chains:
-            assert callable(callback)
-            self._dict_callback_chains_for_every_task[task_id].append(callback)
+        if callback_chains:
+            if not self._dict_callback_chains_for_every_task.has_key(task_id):
+                self._dict_callback_chains_for_every_task[task_id] = []
+            
+            for callback in callback_chains:
+                assert callable(callback)
+                self._dict_callback_chains_for_every_task[task_id].append(callback)
         
         #
         # execute and recoud
@@ -446,6 +459,14 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
             return _wraper.desc
         else:
             return None
+    
+    #----------------------------------------------------------------------
+    def regist_common_result_callback(self, callback):
+        """"""
+        assert callable(callback)
+        
+        self._list_result_common_callback_chains.append(callback)
+        
         
 
 ########################################################################

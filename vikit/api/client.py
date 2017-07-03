@@ -97,9 +97,7 @@ def execute(module_name, params, offline=False, task_id=None, callback_chains=[]
         
     except twisteduserclient.ClientError:
         pass
-    
-    client.execute(module_name, params, offline, task_id, callback_chains)
-    
+  
     return task_id
 
 @_fsm.onstate(state_CONNECTED)
@@ -138,6 +136,12 @@ def __start_update_client_state_until_client_working():
     
     _loopingcall = LoopingCall(_update_client_state_until_client_working)
     _loopingcall.start(0.3)
+
+#----------------------------------------------------------------------
+def regist_common_result_callback(callback):
+    """"""
+    client = get_client()
+    client.regist_common_result_callback(callback)
 
 #----------------------------------------------------------------------
 def call_in_thread(executable):

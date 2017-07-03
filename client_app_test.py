@@ -15,7 +15,7 @@ from vikit import api
 #----------------------------------------------------------------------
 def test_app():
     """"""
-        
+    config = twisteduserclient.ClientConfig('39.108.169.134')
     c = twisteduserclient.TwistedClient()
     c.start()
     
@@ -41,12 +41,14 @@ def test_app():
     #reactor.callLater(1, execute_task1)
     
     reactor.callLater(3, execute_task2)
+    
+    print('running mainloop')
     c.mainloop_start()
     
 #----------------------------------------------------------------------
 def test_api():
     """"""
-    api.client.twisted_start_client()
+    api.client.twisted_start_client('39.108.169.134')
     reactor.callLater(3, api.client.execute, 'demo', {"target":'http://tbis.me',
                            'payload':'adfa',
                            'config':{'param1':True,
@@ -58,4 +60,4 @@ def test_api():
     api.client.mainloop_start()
 
 
-test_app()
+test_api()

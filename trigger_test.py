@@ -12,21 +12,38 @@ from vikit.api.trigger import get_client_proxy
 from vikit.api.client import state_CONNECTED
 
 
-ctrigger = get_client_proxy(platform_host='127.0.0.1', platform_port=7000,
+#----------------------------------------------------------------------
+def print_task_id(result_dict):
+    """"""
+    print('[trigger]: got a task! ID:{}'.format(result_dict.get('task_id')))
+    return result_dict
+
+ctrigger = get_client_proxy(platform_host='39.108.169.134', platform_port=7000,
                             id=None)
+ctrigger.regist_result_callback(print_task_id)
+
+while not ctrigger.state == state_CONNECTED:
+    pass
 
 modules = ctrigger.get_available_modules()
 print(ctrigger.get_help_for_module('demo'))
-#assert len(modules) > 0
+
 print('submit task')
 ctrigger.execute('demo', {"target":'http://tbis.me',
                           'payload':'adfa',
                           'config':{'param1':True,
                                     'param2':'asdfasd'}},
-                 False, offline=True)
+                 offline=True)
+
+ctrigger.execute('demo', {"target":'http://tbis.me',
+                          'payload':'adfa',
+                          'config':{'param1':True,
+                                    'param2':'asdfasd'}},
+                 True)
+
 print('submit task success')
 
 print('sleeping 10 seconds')
-time.sleep(20)
+time.sleep(10)
 ctrigger.shutdown()
 exit()

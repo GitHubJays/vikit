@@ -8,9 +8,11 @@
 
 import sys
 import os
+import time
 import signal
 
 from multiprocessing import Pipe, Process
+from threading import Thread
 from twisted.internet import reactor
 
 from .. import client
@@ -28,8 +30,9 @@ action_shutdown = 'shutdown'
 def get_client_proxy(platform_host, platform_port, id=None, **config):
     """"""
     p1, p2 = Pipe()
+    rp1, rp2 = Pipe()
     
-    trigger = ClientTrigger(p2, platform_host, platform_port, id, **config)
+    trigger = ClientTrigger(p2, rp1, platform_host, platform_port, id, **config)
     
     #
     # prepare process and set daemon
@@ -38,7 +41,7 @@ def get_client_proxy(platform_host, platform_port, id=None, **config):
     trigger_process.daemon = True
     trigger_process.start()
     
-    return ClientProxy(p1, trigger_process)
+    return ClientProxy(p1, rp2, trigger_process)
     
 
 ########################################################################
@@ -46,17 +49,42 @@ class ClientProxy(_base.ProxyBase):
     """"""
 
     #---------------------------------------------------------------------
-    def __init__(self, pipe, process):
+    def __init__(self, pipe, result_pipe, process):
         """Constructor"""
         
         self._pipe = pipe
         self._process = process
         
+        self._result_pipe = result_pipe
+        
+        self._list_result_callbacks = []
+        
+        #
+        # start the 
+        #
+        self._thread_receive_result = Thread(target=self._receiving_result,
+                                             name='receiving-result')
+        self._thread_receive_result.daemon = True
+        self._thread_receive_result.start()
         
     #----------------------------------------------------------------------
     def _send(self, data):
         """"""
         self._pipe.send(data)
+        
+    #----------------------------------------------------------------------
+    def _receiving_result(self):
+        """"""
+        while True:
+            if self._result_pipe.poll():
+                data = self._result_pipe.recv()
+                self.on_result_received(data)
+    
+    #----------------------------------------------------------------------
+    def on_result_received(self, result_dict):
+        """"""
+        for i in self._list_result_callbacks:
+            result_dict = i(result_dict)
     
     #----------------------------------------------------------------------
     def execute(self, module_name, params, offline=False, task_id=None):
@@ -130,11 +158,21 @@ class ClientProxy(_base.ProxyBase):
         return self._receive_data()
         
     #----------------------------------------------------------------------
-    def _receive_data(self):
+    def _receive_data(self, timeout=3, default=None):
         """"""
-        while True:
+        _future = int(time.time()) + 3
+        while _future > int(time.time()):
             if self._pipe.poll():
                 return self._pipe.recv()
+        
+        return default
+    
+    #----------------------------------------------------------------------
+    def regist_result_callback(self, callback):
+        """"""
+        assert callable(callback)
+        
+        self._list_result_callbacks.append(callback)
 
 
 ########################################################################
@@ -142,7 +180,7 @@ class ClientTrigger(_base.Trigger):
     """"""
 
     #---------------------------------------------------------------------
-    def __init__(self, pipe, platform_host, platform_port, 
+    def __init__(self, pipe, result_pipe, platform_host, platform_port, 
                  id=None, **config):
         """Constructor"""
         self.platform_host = platform_host
@@ -151,6 +189,7 @@ class ClientTrigger(_base.Trigger):
         self.config = config
         
         self._pipe = pipe
+        self._result_pipe = result_pipe
     
     #----------------------------------------------------------------------
     def _recieving(self):
@@ -180,6 +219,11 @@ class ClientTrigger(_base.Trigger):
                 return None
     
     #----------------------------------------------------------------------
+    def on_result_received(self, result_dict):
+        """"""
+        self._result_pipe.send(result_dict)
+    
+    #----------------------------------------------------------------------
     def start(self):
         """"""
         client.twisted_start_client(self.platform_host,
@@ -188,6 +232,8 @@ class ClientTrigger(_base.Trigger):
                                     id=self.id,
                                     update_client_state=True,
                                     **self.config)
+        
+        client.regist_common_result_callback(self.on_data_received)
         
         #
         # prepare receiving data
