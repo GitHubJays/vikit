@@ -96,3 +96,4 @@ def get_result(task_id):
     '''return the task result according the task_id'''
     result = None
     return render_template('result.html', task_id=task_id, result=result)
+
