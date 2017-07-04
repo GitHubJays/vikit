@@ -1,0 +1,51 @@
+<script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+
+<div id="modules">
+    <ul id="modules_ul"></ul>
+</div>
+<button id="start">start</button>
+
+<script type="text/javascript">
+    $("#start").click(function () {
+            if ($(this).text() == 'start') {
+                ajax_get_mods();
+                //set interval
+                var interval_id = setInterval("ajax_get_mods", 3000);
+                //set text to stop
+                $(this).text('stop');
+            }
+            else {
+                //clear interval
+                clearInterval(interval_id)
+                $(this).text('start');
+            }
+        }
+    );
+
+    function ajax_get_mods() {
+        $.ajax(
+            {
+                url: "{{ url_for('available-modules') }}",
+                success: function (result) {
+                    //add li to ul
+                    show_modules(result);
+                },
+                error:function () {
+                    alert('ajax request error');
+                }
+
+            }
+        )
+    }
+
+    function show_modules(result) {
+        var mod_list = jQuery.parseJSON(result)
+        //delete the old li
+        $("#modules_ul").remove("li");
+        //add new li (need to be handle later)
+        for (var i = 0; i < mod_list.length; i++) {
+            $("#modules_ul").append('<li>' + mod_list[i] + '</li>')
+        }
+    }
+
+</script>

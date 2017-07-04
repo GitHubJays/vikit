@@ -1,0 +1,9 @@
+{% extends '__base__.html' %}
+{% if result %}
+    <p>{{ task_id }}</p>
+    <p>{{ result }}</p>
+{% else %}
+    <p>task hasn't finished,please wait for 5 seconds</p>
+    <!-- refresh after 5 seconds -->
+    <script>setTimeout(window.location.reload(),5000)</script>
+{% endif %}
