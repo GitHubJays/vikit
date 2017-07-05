@@ -224,7 +224,7 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #
         # update offline tasks
         #
-        self._start_require_offline_tasks()
+        #self._start_require_offline_tasks()
         
     
     #----------------------------------------------------------------------
@@ -283,10 +283,11 @@ class TwistedClient(interfaces.AppInterfaces, singleton.Singleton):
         #
         # update services  
         #
+        self.update_agentwrapper_from_services(services)
+        
         if self.state == state_START:
             self._fsm.action(action_STARTUP)
-            self._fsm.action(action_WORK)
-        self.update_agentwrapper_from_services(services)
+            self._fsm.action(action_WORK)        
     
     #----------------------------------------------------------------------
     def build_agent(self, module_name):

@@ -55,10 +55,13 @@ class TwistdConnector(ConnecterIf):
         
         _twistedconnect = reactor.connectTCP(target_host, target_port, factory, 
                                                  connect_timeout)
-  
+        
         self.connector = _twistedconnect
         
-
+    #----------------------------------------------------------------------
+    def after_connected(self):
+        """"""
+        
         
         
     #----------------------------------------------------------------------

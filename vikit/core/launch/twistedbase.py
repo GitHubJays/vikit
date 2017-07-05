@@ -185,7 +185,7 @@ class VikitTwistedProtocol(Protocol):
         #
         # do not use (FileWriteDescriptor) self.transport.write 
         #
-        self.transport.writeSomeData(tessxt)
+        self.transport.writeSequence(tessxt)#.writeSomeData(tessxt)
         return 
     
     #----------------------------------------------------------------------
@@ -197,6 +197,7 @@ class VikitTwistedProtocol(Protocol):
     #----------------------------------------------------------------------
     def connectionMade(self):
         """"""
+        logger.debug('[netio] {} CONNECTED!'.format(self.entity))
         #
         # regist * sender
         #
@@ -258,9 +259,8 @@ class VikitTwistedProtocolClientFactory(ClientFactory):
                                     self.ack_timeout, self.retry_times, addr=addr)
         
         return _ret
-        
-        
     
+
     
         
     

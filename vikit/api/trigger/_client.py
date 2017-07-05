@@ -67,6 +67,8 @@ class ClientProxy(_base.ProxyBase):
         self._thread_receive_result.daemon = True
         self._thread_receive_result.start()
         
+        self._count_of_extra_data = 0
+        
     #----------------------------------------------------------------------
     def _send(self, data):
         """"""
@@ -163,8 +165,13 @@ class ClientProxy(_base.ProxyBase):
         _future = int(time.time()) + 3
         while _future > int(time.time()):
             if self._pipe.poll():
-                return self._pipe.recv()
+                _ret = self._pipe.recv()
+                if self._count_of_extra_data == 0:
+                    return _ret
+                else:
+                    self._count_of_extra_data = self._count_of_extra_data - 1
         
+        self._count_of_extra_data = self._count_of_extra_data + 1
         return default
     
     #----------------------------------------------------------------------
@@ -221,11 +228,13 @@ class ClientTrigger(_base.Trigger):
     #----------------------------------------------------------------------
     def on_result_received(self, result_dict):
         """"""
+        print('[trigger] result is send back')
         self._result_pipe.send(result_dict)
     
     #----------------------------------------------------------------------
     def start(self):
         """"""
+        
         client.twisted_start_client(self.platform_host,
                                     self.platform_port,
                                     async=True,
@@ -233,8 +242,8 @@ class ClientTrigger(_base.Trigger):
                                     update_client_state=True,
                                     **self.config)
         
-        client.regist_common_result_callback(self.on_data_received)
-        
+        client.regist_common_result_callback(self.on_result_received)
+
         #
         # prepare receiving data
         #
