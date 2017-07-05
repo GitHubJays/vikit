@@ -4,26 +4,11 @@
 <button id="start">start</button>
 
 <script type="text/javascript">
-    $("#start").click(function () {
-            if ($(this).text() == 'start') {
-                ajax_get_mods();
-                //set interval
-                var interval_id = setInterval("ajax_get_mods", 3000);
-                //set text to stop
-                $(this).text('stop');
-            }
-            else {
-                //clear interval
-                clearInterval(interval_id)
-                $(this).text('start');
-            }
-        }
-    );
 
-    function ajax_get_mods() {
+     function ajax_get_mods() {
         $.ajax(
             {
-                url: "{{ url_for('available-modules') }}",
+                url: "{{ url_for('get_available_module') }}",
                 success: function (result) {
                     //add li to ul
                     show_modules(result);
@@ -39,10 +24,28 @@
     function show_modules(result) {
         var mod_list = jQuery.parseJSON(result)
         //delete the old li
-        $("#modules_ul").remove("li");
+        $("#modules_ul").empty();
         //add new li (need to be handle later)
         for (var i = 0; i < mod_list.length; i++) {
             $("#modules_ul").append('<li>' + mod_list[i] + '</li>')
         }
     }
+
+    var interval_id
+    $("#start").click(function () {
+            if ($(this).text() == 'start') {
+                ajax_get_mods();
+                //set interval
+                interval_id= setInterval("ajax_get_mods()", 3000);
+                //set text to stop
+                $(this).text('stop');
+            }
+            else {
+                //clear interval
+                clearInterval(interval_id)
+                $(this).text('start');
+            }
+        }
+    );
+
 </script>
