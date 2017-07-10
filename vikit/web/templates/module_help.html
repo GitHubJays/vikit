@@ -1,5 +1,9 @@
+<div id="help_area">
 {% if module_help %}
-    <p>{{ module_help }}</p>
+    <p id="module_help_name"></p>
+    <p id="module_help">{{ module_help }}</p>
 {% else %}
-    <p> no module selected</p>
+    <p id="module_help_name"></p>
+    <p id="module_help">help: no module selected</p>
 {% endif %}
+</div>

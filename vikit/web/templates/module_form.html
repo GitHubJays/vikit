@@ -1,4 +1,7 @@
-{% if selected_module%}
+<div id="module_form">
+    <p id="no_form">form : no module selected</p>
+
+<!--
 <form action="submit_task" method="post" name="post_params">
     <p>module:<input type="text" name="module" value="{{ selected_module }}" /></p>
     <p>Target: <input type="text" name="target" /></p>
@@ -6,8 +9,9 @@
     <p>config: <input type="text" name="config" /></p>
     <p>config format: param1:str1,param2:str2</p>
     <p>offline:<input type="text" name="offline" value="1"/></p>
-    <input type="submit" value="Submit Task" />
+    <p>task_id:<input type="text" name="task_id" value="123456"/></p>
+    <input type="submit" value="Submit" />
 </form>
-{% else %}
-    <p>no module selected</p>
-{% endif %}
+
+-->
+</div>

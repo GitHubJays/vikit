@@ -1,5 +1,7 @@
 {% extends '__base__.html' %}
-{% block result}
+
+{% block result %}
+    <div id="reuslt_area">
 {% if result %}
     <p>{{ task_id }}</p>
     <p>{{ result }}</p>
@@ -8,4 +10,6 @@
     <!-- refresh after 5 seconds -->
     <script>setTimeout(window.location.reload(),5000)</script>
 {% endif %}
+    </div>
 {% endblock %}
+

@@ -44,7 +44,6 @@ def get_available_module():
     global proxy
     proxy.get_available_modules()
     return json.dumps(proxy.get_available_modules())
-    # return '<p>' + str(proxy.get_available_modules()) + '</p>'
 
 
 @client_app.route('/help/<module_name>')
@@ -92,8 +91,8 @@ def execute():
                                           },
                             offline=offline)
 
-    return '<p>task_id:' + str(task_id) + '</p>'
-
+    return '<p>waif for few seconds until the result back.</p><br><a href="result/'+str(task_id)+'">'+'check result here'+'</a>' 
+    
 
 result = None
 

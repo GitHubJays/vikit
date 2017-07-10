@@ -31,19 +31,19 @@
         }
     }
 
+    var state='offline';
+
     function ajax_start_proxy(){
          $.ajax(
             {
                 url: "{{ url_for('start') }}",
+                async:false,
                 success: function (result) {
-                    //add li to ul
                     if(result == 'success')
-                        return 'success';
-                    else
-                        return 'failed';
+                        state='on';
                 },
                 error:function () {
-                    alert('ajax start request error');
+                    alert('ajax start request failed');
                 }
 
             }
@@ -54,7 +54,9 @@
     $("#start").click(function () {
             if ($(this).text() == 'start') {
                 //start the proxy
-                if (ajax_start_proxy()=='success')
+                ajax_start_proxy();
+                alert(state);
+                if (state=='on')
                 {
                     ajax_get_mods();
                     //set interval
@@ -66,12 +68,42 @@
                     alert('start proxy failed');
                 }
             }
-            else {
+            else {//stop option
                 //clear interval
                 clearInterval(interval_id)
+		state='offline';
                 $(this).text('start');
             }
         }
     );
+    
 
-</script>
+    function show_help(result) {
+        temp_json_obj=jQuery.parseJSON(result);
+        module_help=temp_json_obj['module_help'];
+        module_name=temp_json_obj['module_name'];
+        $('#module_help').text(module_help);
+        $('#module_help_name').text(module_name);
+    }
+    //add click event to li according their module_name and partly refresh the page of help and form
+    $("#modules_ul").on('click','li',function(){
+        //set help
+        $.ajax(
+            {
+                url: "/select_module/"+$(this).text(),
+                success: function (result) {
+                    //add li to ul
+                    show_help(result);
+                },
+                error:function () {
+                    alert('ajax request error');
+                }
+
+            }
+        )
+        //generate a form to append after help
+        $("#module_form").empty();
+        form_str='<form action="/execute" method="post" name="mod_input">'+'<p>module:<input type="text" name="module" value="'+$(this).text()+'" /></p>'+'<p>Target: <input type="text" name="target" /></p>'+'<p>payload: <input type="text" name="payload" /></p>'+'<p>config: <input type="text" name="config" /></p>'+'<p>config format: {"param1":"str1","param2":"str2"}</p>'+'<p>offline:<input type="text" name="offline" value="1"/></p>'+'<input type="submit" value="Submit" />';
+        $("#module_form").append(form_str);
+
+    });                                                                                                                                                                          </script>
