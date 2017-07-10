@@ -26,7 +26,7 @@ def start():
 
     proxy = get_client_proxy('39.108.169.134', 7000)
     proxy.regist_result_callback(on_result_feedback)
-    return '<h1>Success</h1>'
+    return 'success' if proxy != None else 'fail'
 
 
 @client_app.route('/shutdown')
@@ -43,8 +43,8 @@ def get_available_module():
     """"""
     global proxy
     proxy.get_available_modules()
-    # return json.dumps(proxy.get_available_modules())
-    return '<p>' + str(proxy.get_available_modules()) + '</p>'
+    return json.dumps(proxy.get_available_modules())
+    # return '<p>' + str(proxy.get_available_modules()) + '</p>'
 
 
 @client_app.route('/help/<module_name>')
@@ -73,31 +73,24 @@ def on_select_module(module_name):
     return render_template('main.html', module_help=module_help, selected_module=module_name)
 
 
-@client_app.route('/execute/<module_name>', methods=['get'])
-def execute(module_name):
+@client_app.route('/execute', methods=['post'])
+def execute():
     """
     get params from form and translate into json then execute
     """
     # def execute(self, module_name, params, offline=False, task_id=None):
     global proxy
-    '''
-    target = request.form['target']
-    payload = request.form['payload']
-    config = json.loads(request.form['config'])
-    offline = request.form['offline']
-    params = {
-        'target': target,
-        'payload': payload,
-        'config': config,
-    }
-    '''
-    # proxy.execute(module_name, params, offline=offline, task_id=None)
-    #temp
-    task_id = proxy.execute('demo', {"target": 'http://tbis.me',
-                                     'payload': 'adfa',
-                                     'config': {'param1': True,
-                                                'param2': 'asdfasd'}},
-                            offline=True)
+    module_name = request.form['module'].strip()
+    target = request.form['target'].strip()
+    payload = request.form['payload'].strip()
+    config = json.loads(request.form['config'].strip())
+    offline = True if request.form['offline'] != '0' else False
+
+    task_id = proxy.execute(module_name, {"target": target,
+                                          'payload': payload,
+                                          'config': config
+                                          },
+                            offline=offline)
 
     return '<p>task_id:' + str(task_id) + '</p>'
 

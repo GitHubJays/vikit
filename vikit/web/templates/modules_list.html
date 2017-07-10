@@ -31,14 +31,40 @@
         }
     }
 
+    function ajax_start_proxy(){
+         $.ajax(
+            {
+                url: "{{ url_for('start') }}",
+                success: function (result) {
+                    //add li to ul
+                    if(result == 'success')
+                        return 'success';
+                    else
+                        return 'failed';
+                },
+                error:function () {
+                    alert('ajax start request error');
+                }
+
+            }
+        )
+    }
+
     var interval_id
     $("#start").click(function () {
             if ($(this).text() == 'start') {
-                ajax_get_mods();
-                //set interval
-                interval_id= setInterval("ajax_get_mods()", 3000);
-                //set text to stop
-                $(this).text('stop');
+                //start the proxy
+                if (ajax_start_proxy()=='success')
+                {
+                    ajax_get_mods();
+                    //set interval
+                    interval_id= setInterval("ajax_get_mods()", 3000);
+                    //set text to stop
+                    $(this).text('stop');
+                }
+                else{
+                    alert('start proxy failed');
+                }
             }
             else {
                 //clear interval
