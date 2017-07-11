@@ -91,7 +91,8 @@ def execute():
                                           },
                             offline=offline)
 
-    return '<p>waif for few seconds until the result back.</p><br><a href="result/'+str(task_id)+'">'+'check result here'+'</a>' 
+    #return '<p>waif for few seconds until the result back.</p><br><a href="result/'+str(task_id)+'">'+'check result here'+'</a>' 
+    return redirect('result/'+task_id)
     
 
 result = None
@@ -108,7 +109,9 @@ def on_result_feedback(result_dict):
 @client_app.route('/result/<task_id>', methods=['get'])
 def show_result(task_id):
     if result != None and result.get('task_id') == task_id:
-        return '<p>task_id:' + result.get('task_id') + '</p><br>' + '<p>task_result:' + str(
-            result.get('task_result')) + '</p>'
+        #return '<p>task_id:' + result.get('task_id') + '</p><br>' + '<p>task_result:' + str(
+        #    result.get('task_result')) + '</p>'
+        return render_template('result.html', result=result, task_id=task_id)
     else:
-        return "<p>Your current task hasn't finished,wait a few seconds</p>"
+        return render_template('result.html')
+
