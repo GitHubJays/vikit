@@ -1,20 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% block meta %}<!-- Add block info here -->{% endblock %}
     <title>Vikit penetration System</title>
+     <link rel="stylesheet" href="{{ url_for('static', filename='button.css') }}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css">
     <script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 </head>
 
 <body>
+<div class="sidebar-menu">
+                    <header class="logo1">
+                        <p href="#" class="sidebar-icon service"> <!-- <span class="fa fa-bars"></span> --> <!-- <i class="fa fa-retweet"></i> --><span>Vikit penetration System</span></p></br></br>
+                    </header>
+                        <div style="border-top:1px ridge rgba(255, 255, 255, 0.15)"></div>
+                           <div class="menu">
+                           {% block mods %}{% endblock %}
+                           </div>
+                           <div class="clearfix"></div>  
+</div>
+<!-- <p>Vikit penetration System</p> -->
+<div class="left">
+<ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                {% block mod_help %}{% endblock %}
+				
+                </li>
+</ol>
 
-<p>Vikit penetration System</p>
+<div id="index" class="contain">
+	{% block mod_params_form %}{% endblock %}
+	{% block result %}{% endblock %}
+</div>
+</div>
 
-{% block mods %}{% endblock %}
-{% block mod_help %}{% endblock %}
-{% block mod_params_form %}{% endblock %}
-{% block result %}{% endblock %}
 
 </body>
 

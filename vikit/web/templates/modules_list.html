@@ -1,7 +1,10 @@
-<div id="modules">
-    <ul id="modules_ul"></ul>
+<button id="start" class="button button-action button-pill" style="display: block; margin-left: 40%; margin-top: -20%;">start</button>
+<div id="modules" style="margin-top: 15px;">
+    <ul id="modules_ul">
+    </ul>
+
 </div>
-<button id="start">start</button>
+
 
 <script type="text/javascript">
 
@@ -27,7 +30,7 @@
         $("#modules_ul").empty();
         //add new li (need to be handle later)
         for (var i = 0; i < mod_list.length; i++) {
-            $("#modules_ul").append('<li>' + mod_list[i] + '</li>')
+            $("#modules_ul").append('<li class='+mod_list[i]+'><a href="javascript:void"> <span>'+mod_list[i]+'</span><div class="clearfix"></div></a></li>');
         }
     }
 
@@ -50,7 +53,7 @@
         )
     }
 
-    var interval_id
+    var interval_id;
     $("#start").click(function () {
             if ($(this).text() == 'start') {
                 //start the proxy
@@ -63,6 +66,8 @@
                     interval_id= setInterval("ajax_get_mods()", 3000);
                     //set text to stop
                     $(this).text('stop');
+                    $(this).removeClass("button-action");
+                    $(this).addClass("button-caution");
                 }
                 else{
                     alert('start proxy failed');
@@ -73,6 +78,8 @@
                 clearInterval(interval_id)
 		state='offline';
                 $(this).text('start');
+                $(this).removeClass("button-caution");
+                $(this).addClass("button-action");
             }
         }
     );
@@ -103,7 +110,7 @@
         )
         //generate a form to append after help
         $("#module_form").empty();
-        form_str='<form action="/execute" method="post" name="mod_input">'+'<p>module:<input type="text" name="module" value="'+$(this).text()+'" /></p>'+'<p>Target: <input type="text" name="target" /></p>'+'<p>payload: <input type="text" name="payload" /></p>'+'<p>config: <input type="text" name="config" /></p>'+'<p>config format: {"param1":"str1","param2":"str2"}</p>'+'<p>offline:<input type="text" name="offline" value="1"/></p>'+'<input type="submit" value="Submit" />';
+        form_str='<form action="/execute" method="post" name="mod_input" class="form">'+'<p><span>module:</span><input type="text" name="module" value="'+$(this).text()+'" class="input" readonly /></p>'+'<p><span>Target:</span><input type="text" name="target" class="input" placeholder="target"/></p>'+'<p><span>payload:</span><input type="text" name="payload" placeholder="payload" class="input"/></p>'+'<p><span>config:</span><input type="text" name="config" placeholder="config" class="input"/></p>'+'<p style="color:#444">config format: {"param1":"str1","param2":"str2"}</p>'+'<p><span>offline:</span><input type="text" name="offline" value="1" class="input"/></p>'+'<input type="submit" value="Submit" class="submit button button-raised button-primary button-pill"/>';
         $("#module_form").append(form_str);
 
     });                                                                                                                                                                          </script>
