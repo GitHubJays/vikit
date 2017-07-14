@@ -9,6 +9,19 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css">
     <script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script type=text/javascript src="{{ url_for('static', filename='jquery.cookie.js') }}"></script>
+    <script>
+     $(document).ready(function(){
+        if($.cookie('state')==null){
+            alert(1);
+            $.cookie('state','offline');
+        }
+        //use to handle refresh
+        if($.cookie('state')=='online'){
+            $("#start").click();
+        }
+     });
+    </script>
 </head>
 
 <body>

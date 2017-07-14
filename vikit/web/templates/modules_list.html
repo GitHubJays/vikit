@@ -17,7 +17,7 @@
                     show_modules(result);
                 },
                 error:function () {
-                    alert('ajax request error');
+                    alert('ajax get_mods request error');
                 }
 
             }
@@ -28,13 +28,12 @@
         var mod_list = jQuery.parseJSON(result)
         //delete the old li
         $("#modules_ul").empty();
-        //add new li (need to be handle later)
+        //add new li 
         for (var i = 0; i < mod_list.length; i++) {
             $("#modules_ul").append('<li class='+mod_list[i]+'><a href="javascript:void"> <span>'+mod_list[i]+'</span><div class="clearfix"></div></a></li>');
         }
     }
 
-    var state='offline';
 
     function ajax_start_proxy(){
          $.ajax(
@@ -42,11 +41,33 @@
                 url: "{{ url_for('start') }}",
                 async:false,
                 success: function (result) {
-                    if(result == 'success')
-                        state='on';
+                    if(result == 'success'){
+                        alert('start success');
+                        $.cookie('state','online');
+                    }
                 },
                 error:function () {
                     alert('ajax start request failed');
+                }
+
+            }
+        )
+    }
+
+
+    function ajax_stop_proxy(){
+         $.ajax(
+            {
+                url: "{{ url_for('shutdown') }}",
+                async:false,
+                success: function (result) {
+                    if(result == 'closed'){
+                        alert('stop success');
+                        $.cookie('state','offline');
+                    }
+                },
+                error:function () {
+                    alert('ajax stop request failed');
                 }
 
             }
@@ -58,12 +79,11 @@
             if ($(this).text() == 'start') {
                 //start the proxy
                 ajax_start_proxy();
-                alert(state);
-                if (state=='on')
+                if ($.cookie('state')=='online')
                 {
                     ajax_get_mods();
                     //set interval
-                    interval_id= setInterval("ajax_get_mods()", 3000);
+                    interval_id= setInterval("ajax_get_mods()", 5000);
                     //set text to stop
                     $(this).text('stop');
                     $(this).removeClass("button-action");
@@ -76,7 +96,8 @@
             else {//stop option
                 //clear interval
                 clearInterval(interval_id)
-		state='offline';
+                //send to close proxy 
+                ajax_stop_proxy();
                 $(this).text('start');
                 $(this).removeClass("button-caution");
                 $(this).addClass("button-action");
@@ -100,7 +121,6 @@
             {
                 url: "/help/"+$.trim($(this).text()),
                 success: function (result) {
-                    alert(result);
                     //add li to ul
                     show_help(result);
                 },

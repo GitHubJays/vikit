@@ -36,8 +36,8 @@ def shutdown():
     global proxy
 
     proxy.shutdown()
-    return '<h1>Success</h1>'
-
+    #return '<h1>Success</h1>'
+    return "closed" 
 
 @client_app.route('/available-modules')
 def get_available_module():
