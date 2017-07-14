@@ -112,7 +112,8 @@
         )
         //generate a form to append after help
         $("#module_form").empty();
-        form_str='<form action="/execute" method="post" name="mod_input" class="form">'+'<p><span>module:</span><input type="text" name="module" value="'+$(this).text()+'" class="input" readonly /></p>'+'<p><span>Target:</span><input type="text" name="target" class="input" placeholder="target"/></p>'+'<p><span>payload:</span><input type="text" name="payload" placeholder="payload" class="input"/></p>'+'<p><span>config:</span><input type="text" name="config" placeholder="config" class="input"/></p>'+'<p style="color:#444">config format: {"param1":"str1","param2":"str2"}</p>'+'<p><span>offline:</span><input type="text" name="offline" value="1" class="input"/></p>'+'<input type="submit" value="Submit" class="submit button button-raised button-primary button-pill"/>';
-        $("#module_form").append(form_str);
-
+        var form='<form action="/execute" method="post" name="mod_input" class="form"></form>';
+        var form_str='<p><span>module:</span><input type="text" name="module" value="'+$(this).text()+'" class="input" readonly /></p>'+'<p><span>Target:</span><input type="text" name="target" class="input" placeholder="target"/></p>'+'<p><span>payload:</span><input type="text" name="payload" placeholder="payload" class="input"/></p>'+'<p><span>config:</span><input type="text" name="config" placeholder="config" class="input"/></p>'+'<p style="color:#555">config format: {"param1":"str1","param2":"str2"}</p>'+'<p><span>offline:</span><input type="text" name="offline" value="1" class="input"/></p>'+'<input type="submit" value="Submit" class="submit button button-raised button-primary button-pill"/>';
+        $("#module_form").append(form);
+        $(".form").append(form_str);
     });                                                                                                                                                                          </script>
