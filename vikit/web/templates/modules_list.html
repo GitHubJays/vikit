@@ -87,18 +87,20 @@
 
     function show_help(result) {
         temp_json_obj=jQuery.parseJSON(result);
-        module_help=temp_json_obj['module_help'];
-        module_name=temp_json_obj['module_name'];
-        $('#module_help').text(module_help);
+        //module_help=temp_json_obj[''];
+        help_str='Author:'+temp_json_obj['AUTHOR']+'</br>'+'Demands:'+temp_json_obj['DEMANDS']+'</br>'+'Result_Description:'+temp_json_obj['RESULT_DESC']+'</br>'+'Description:'+temp_json_obj['DESCRIPTION']+'</br>';
+        module_name=temp_json_obj['NAME'];
         $('#module_help_name').text(module_name);
+        $('#module_help').html(help_str);
     }
     //add click event to li according their module_name and partly refresh the page of help and form
     $("#modules_ul").on('click','li',function(){
         //set help
         $.ajax(
             {
-                url: "/select_module/"+$(this).text(),
+                url: "/help/"+$.trim($(this).text()),
                 success: function (result) {
+                    alert(result);
                     //add li to ul
                     show_help(result);
                 },
