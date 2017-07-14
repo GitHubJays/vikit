@@ -24,8 +24,9 @@ def start():
     """"""
     global proxy
 
-    proxy = get_client_proxy('39.108.169.134', 7000)
-    proxy.regist_result_callback(on_result_feedback)
+    if proxy==None:
+        proxy = get_client_proxy('39.108.169.134', 7000)
+        proxy.regist_result_callback(on_result_feedback)
     return 'success' if proxy != None else 'fail'
 
 
