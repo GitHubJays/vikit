@@ -3,8 +3,15 @@
 {% block result %}
     <!-- <div id="reuslt_area"> -->
 {% if result %}
-    <div style="margin-top: -64px"><p>{{ task_id }}</p></div>
-    <div style="margin-top:40px"><p>{{ result }}</p></div>
+    <div style="display: none"><p>{{ task_id }}</p></div>
+    <div ><p>{{ result }}</p></div>
+    <script type="text/javascript">
+    var task_id_text='<p>{{ task_id }}</p>';
+    var click_back='<a class="" href="/" style="position: absolute; z-index: 9999;font-size: 20px;color:#fff;margin-top:-30px" >click back</a>'
+    $(".breadcrumb-item").empty();
+    $(".breadcrumb-item").append(task_id_text);
+    $(".logo1").append(click_back);
+    </script>
 {% else %}
     <p>task hasn't finished,please wait for 5 seconds</p>
     <!-- refresh after 5 seconds -->
