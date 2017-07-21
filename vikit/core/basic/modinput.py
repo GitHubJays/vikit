@@ -9,6 +9,7 @@
 import warnings
 
 from . import payload
+from . import target
 
 from .param import Param, ParamSet
 from .payload import PayloadEnum, Payload
@@ -78,6 +79,15 @@ class DemandBase(object):
 ########################################################################
 class TargetDemand(DemandBase):
     """"""
+    def __init__(self,dst,dst_type=target.TYPE_URL):
+        DemandBase.__init__(self,dst,dst_type)
+
+    def __str__(self):
+        return '%s : %s' % (self.dst,self.dst_type)
+
+    def __repr__(self):
+        return '%s : %s' % (self.dst,self.dst_type)
+
 
 ########################################################################
 class PayloadDemand(DemandBase):
@@ -88,7 +98,11 @@ class PayloadDemand(DemandBase):
         """"""
         DemandBase.__init__(self, dst, dst_type)
         
+    def __str__(self):
+        return '%s : %s' % (self.dst,self.dst_type)
 
+    def __repr__(self):
+        return '%s : %s' % (self.dst,self.dst_type)
 
 ########################################################################
 class ParamDemand(DemandBase):
@@ -106,7 +120,11 @@ class ParamDemand(DemandBase):
         """"""
         return self._haveto
     
-    
+    def __str__(self):
+        return '%s : %s' % (self.dst,self.dst_type)
+
+    def __repr__(self):
+        return '%s : %s' % (self.dst,self.dst_type)
 
 ########################################################################
 class _Demands(object):
